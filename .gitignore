@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+credenciais_google.json
+.streamlit/
