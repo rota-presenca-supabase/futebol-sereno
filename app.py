@@ -146,13 +146,14 @@ def aplicar_estilo_global():
             color: #111827;
         }
 
-        .sereno-logo-central {
+        .sereno-logo-rodape {
             width: 100%;
             display: flex;
             justify-content: center !important;
             align-items: center;
             text-align: center;
-            margin-bottom: 12px;
+            margin-top: 28px;
+            margin-bottom: 10px;
         }
 
         .sereno-card-presenca {
@@ -571,20 +572,16 @@ def formatar_tempo_restante(segundos):
     segundos_restantes = int(segundos % 60)
     return f"{minutos:02d}:{segundos_restantes:02d}"
 
-def distribuir_bloco_sem_vazios(nomes_embaralhados, qtd_total_time1, qtd_total_time2):
-    bloco_time1 = []
-    bloco_time2 = []
-    proximo_time = 1 if qtd_total_time1 <= qtd_total_time2 else 2
+def distribuir_grupo_para_listas(nomes_embaralhados, time_1, time_2):
+    proximo_time = 1 if len(time_1) <= len(time_2) else 2
 
     for nome in nomes_embaralhados:
         if proximo_time == 1:
-            bloco_time1.append(nome)
+            time_1.append(nome)
             proximo_time = 2
         else:
-            bloco_time2.append(nome)
+            time_2.append(nome)
             proximo_time = 1
-
-    return bloco_time1, bloco_time2
 
 def sortear_times(df_cadastro, df_presenca):
     cadastro_map = {}
@@ -627,34 +624,24 @@ def sortear_times(df_cadastro, df_presenca):
     ordem_categorias = ["MENSALISTA", "DIARISTA", "CONVIDADO", "PEQUENO_JOGADOR"]
     ordem_posicoes = ["ZAGUEIRO", "MEIO CAMPO", "ATACANTE"]
 
-    linhas_sorteio = []
-    ordem = 1
-    total_time1 = 0
-    total_time2 = 0
+    time_1 = []
+    time_2 = []
 
     for categoria in ordem_categorias:
         for posicao in ordem_posicoes:
             nomes_grupo = grupos[categoria][posicao]
-            if not nomes_grupo:
-                continue
+            if nomes_grupo:
+                distribuir_grupo_para_listas(nomes_grupo, time_1, time_2)
 
-            bloco_time1, bloco_time2 = distribuir_bloco_sem_vazios(
-                nomes_grupo,
-                total_time1,
-                total_time2
-            )
+    max_len = max(len(time_1), len(time_2))
+    linhas_sorteio = []
 
-            max_len_bloco = max(len(bloco_time1), len(bloco_time2))
-            for i in range(max_len_bloco):
-                linhas_sorteio.append({
-                    "ORDEM": str(ordem),
-                    "TIME_1": bloco_time1[i] if i < len(bloco_time1) else "",
-                    "TIME_2": bloco_time2[i] if i < len(bloco_time2) else "",
-                })
-                ordem += 1
-
-            total_time1 += len(bloco_time1)
-            total_time2 += len(bloco_time2)
+    for i in range(max_len):
+        linhas_sorteio.append({
+            "ORDEM": str(i + 1),
+            "TIME_1": time_1[i] if i < len(time_1) else "",
+            "TIME_2": time_2[i] if i < len(time_2) else "",
+        })
 
     return pd.DataFrame(linhas_sorteio, columns=["ORDEM", "TIME_1", "TIME_2"])
 
@@ -795,15 +782,6 @@ with st.sidebar:
 # ==========================================================
 # TOPO
 # ==========================================================
-logo_path = Path("SERENO FC.png")
-
-st.markdown("<div class='sereno-logo-central'>", unsafe_allow_html=True)
-col_logo_esq, col_logo_centro, col_logo_dir = st.columns([1, 1, 1])
-with col_logo_centro:
-    if logo_path.exists():
-        st.image(str(logo_path), width=140)
-st.markdown("</div>", unsafe_allow_html=True)
-
 st.markdown(
     """
     <div class="sereno-topo">
@@ -1133,6 +1111,17 @@ try:
         else:
             st.markdown("### Resultado do sorteio")
             exibir_tabela_html(df_sorteio[["ORDEM", "TIME_1", "TIME_2"]], centralizar_colunas=["ORDEM"])
+
+    # ======================================================
+    # LOGO NO FINAL DA PÁGINA
+    # ======================================================
+    st.markdown("<div class='sereno-logo-rodape'>", unsafe_allow_html=True)
+    col_logo_esq2, col_logo_centro2, col_logo_dir2 = st.columns([1, 1, 1])
+    with col_logo_centro2:
+        logo_path = Path("SERENO FC.png")
+        if logo_path.exists():
+            st.image(str(logo_path), width=210)
+    st.markdown("</div>", unsafe_allow_html=True)
 
 except SpreadsheetNotFound:
     st.error("Planilha 'FUTEBOL_SERENO' não encontrada ou não compartilhada com a service account.")
