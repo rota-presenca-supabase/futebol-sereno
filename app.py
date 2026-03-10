@@ -1085,7 +1085,7 @@ try:
                             st.session_state.pendente_excluir_jogador = ""
                             st.rerun()
         else:
-            st.warning("Área de edição restrita ao administrador.")
+            st.warning("Área de Edição restrita ao Adm.!")
 
     # ======================================================
     # ABA 2 - JOGADORES CADASTRADOS
@@ -1168,7 +1168,7 @@ try:
 
                 st.markdown("</div>", unsafe_allow_html=True)
         else:
-            st.warning("Alterações de presença restritas ao Adm.")
+            st.warning("Alterações de Presença restritas ao Adm.!")
 
     # ======================================================
     # ABA 4 - SORTEIO
