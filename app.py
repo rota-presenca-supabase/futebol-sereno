@@ -720,7 +720,7 @@ def anexar_timestamp_sorteio(df_sorteio, timestamp_str):
 
     if df_sorteio.empty:
         return pd.DataFrame(
-            [{"ORDEM": "", "TIME 1": "", "TIME 2": "", "SORTEIO": timestamp_str}],
+            [{"ORDEM": "", "TIME_1": "", "TIME_2": "", "SORTEIO": timestamp_str}],
             columns=COLUNAS_SORTEIO
         )
 
