@@ -102,7 +102,7 @@ def aplicar_estilo_global():
             width: 100%;
             min-width: 100%;
             border-collapse: collapse;
-            font-size: 0.97rem;
+            font-size: 0.85rem;
             table-layout: auto;
         }
 
