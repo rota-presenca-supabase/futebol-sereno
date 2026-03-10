@@ -1254,7 +1254,7 @@ try:
         df_sorteio = df_sorteio[df_sorteio["Ordem"] != ""].reset_index(drop=True)
 
         if df_sorteio.empty:
-            st.info("Ainda não há sorteio realizado.")
+            st.info("Ainda não há sorteio realizado!")
         else:
             exibir_tabela_html(
                 df_sorteio[["Ordem", "Time A", "Time B"]],
