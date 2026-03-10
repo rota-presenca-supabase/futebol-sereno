@@ -35,8 +35,8 @@ SCOPES = [
 # ==========================================================
 # ACESSO ADMINISTRADOR
 # ==========================================================
-ADMIN_USUARIO = "Administrador"
-ADMIN_SENHA = "Administrador@123"
+ADMIN_USUARIO = "sereno"
+ADMIN_SENHA = "sereno"
 
 # ==========================================================
 # CONTROLE DE NOVO SORTEIO / LIMPAR SORTEIO
