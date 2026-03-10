@@ -1,5 +1,6 @@
 import random
 import time
+import urllib.parse
 from pathlib import Path
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -75,8 +76,8 @@ def aplicar_estilo_global():
         }
 
         .sereno-titulo {
-            font-size: 3.0rem !important; /* Reduzido em 40% conforme solicitado */
-            font-weight: 900 !important; /* Forçado para negrito máximo */
+            font-size: 3.0rem !important;
+            font-weight: 900 !important;
             color: #111827;
             margin: 0;
             line-height: 1.3;
@@ -109,7 +110,7 @@ def aplicar_estilo_global():
         table.sereno-table thead th {
             background: #111827;
             color: #ffffff;
-            text-align: center; /* Cabeçalho centralizado */
+            text-align: center;
             padding: 12px 14px;
             font-weight: 700;
             border-bottom: 1px solid #111827;
@@ -144,16 +145,6 @@ def aplicar_estilo_global():
             font-weight: 700;
             margin-bottom: 10px;
             color: #111827;
-        }
-
-        .sereno-logo-rodape {
-            width: 100%;
-            display: flex;
-            justify-content: center !important;
-            align-items: center;
-            text-align: center;
-            margin-top: 28px;
-            margin-bottom: 10px;
         }
 
         .sereno-card-presenca {
@@ -192,10 +183,9 @@ def aplicar_estilo_global():
             border-radius: 12px 12px 0 0;
         }
 
-        /* Mirando diretamente no texto da guia para forçar tamanho */
         button[data-baseweb="tab"] p,
         div[data-testid="stTabs"] button p {
-            font-size: 1.15rem !important; /* Mantém o tamanho levemente maior */
+            font-size: 1.15rem !important;
         }
 
         div[data-testid="stCheckbox"] {
@@ -219,7 +209,6 @@ def aplicar_estilo_global():
             font-size: 1.2rem !important;
         }
 
-        /* Oculta os ancoradores CSS que usamos para colorir os botões cirurgicamente */
         div.element-container:has(#btn-salvar-presenca),
         div.element-container:has(#btn-marcar-sim),
         div.element-container:has(#btn-marcar-nao),
@@ -230,7 +219,6 @@ def aplicar_estilo_global():
             display: none !important;
         }
 
-        /* Cores Cirúrgicas para aba Presença */
         div.element-container:has(#btn-atualizar-presenca) + div.element-container div.stButton > button {
             background-color: #f3f4f6 !important; border-color: #e5e7eb !important; color: #1f2937 !important;
         }
@@ -244,7 +232,6 @@ def aplicar_estilo_global():
             background-color: #fee2e2 !important; border-color: #fecaca !important; color: #991b1b !important;
         }
 
-        /* Cores Cirúrgicas para aba Sorteio */
         div.element-container:has(#btn-atualizar-dados) + div.element-container div.stButton > button {
             background-color: #f3f4f6 !important; border-color: #e5e7eb !important; color: #1f2937 !important;
         }
@@ -335,6 +322,64 @@ def parse_timestamp_sorteio(texto):
         return datetime.strptime(texto, FORMATO_SORTEIO).replace(tzinfo=FUSO_BR)
     except Exception:
         return None
+
+# ==========================================================
+# WHATSAPP
+# ==========================================================
+def gerar_texto_whatsapp_sorteio(df_sorteio):
+    if df_sorteio.empty:
+        return "Ainda não há sorteio realizado."
+
+    df = df_sorteio.copy()
+
+    for col in ["Ordem", "Time A", "Time B", "SORTEIO"]:
+        if col not in df.columns:
+            df[col] = ""
+
+    df["Ordem"] = df["Ordem"].astype(str).str.strip()
+    df["Time A"] = df["Time A"].astype(str).str.strip()
+    df["Time B"] = df["Time B"].astype(str).str.strip()
+    df["SORTEIO"] = df["SORTEIO"].astype(str).str.strip()
+
+    df_linhas = df[df["Ordem"] != ""].copy()
+
+    lista_a = [nome for nome in df_linhas["Time A"].tolist() if str(nome).strip()]
+    lista_b = [nome for nome in df_linhas["Time B"].tolist() if str(nome).strip()]
+
+    timestamp = ""
+    for val in df["SORTEIO"].tolist():
+        if str(val).strip():
+            timestamp = str(val).strip()
+            break
+
+    linhas = []
+    linhas.append("🏆 *Resumo do Sorteio - Sereno F.C.*")
+
+    if timestamp:
+        linhas.append(f"📅 {timestamp}")
+
+    linhas.append("")
+    linhas.append("🔵 *Time A*")
+    if lista_a:
+        for i, nome in enumerate(lista_a, start=1):
+            linhas.append(f"{i}. {nome}")
+    else:
+        linhas.append("Sem jogadores")
+
+    linhas.append("")
+    linhas.append("🔴 *Time B*")
+    if lista_b:
+        for i, nome in enumerate(lista_b, start=1):
+            linhas.append(f"{i}. {nome}")
+    else:
+        linhas.append("Sem jogadores")
+
+    return "\n".join(linhas)
+
+def gerar_link_whatsapp_sorteio(df_sorteio):
+    texto = gerar_texto_whatsapp_sorteio(df_sorteio)
+    texto_codificado = urllib.parse.quote(texto)
+    return f"https://wa.me/?text={texto_codificado}"
 
 # ==========================================================
 # CONEXÃO
@@ -642,7 +687,7 @@ def sortear_times(df_cadastro, df_presenca):
             presentes.append({
                 "nome": nome,
                 "categoria": cadastro_map[nome]["categoria"],
-                "posicao": cadastro_map[nome]["posicao"] # Mantém a posição guardada
+                "posicao": cadastro_map[nome]["posicao"]
             })
 
     grupos = {
@@ -652,13 +697,11 @@ def sortear_times(df_cadastro, df_presenca):
         "CRIANÇA": []
     }
 
-    # Agrupa apenas por Categoria para o momento do sorteio (ignora a posição no sorteio)
     for jogador in presentes:
         categoria = jogador["categoria"]
         if categoria in grupos:
-            grupos[categoria].append(jogador) # Passa o dicionário completo do jogador
+            grupos[categoria].append(jogador)
 
-    # Embaralha os jogadores dentro de cada categoria
     for categoria in grupos:
         random.shuffle(grupos[categoria])
 
@@ -667,39 +710,29 @@ def sortear_times(df_cadastro, df_presenca):
     time_1_objs = []
     time_2_objs = []
 
-    # Distribui alternadamente (um para cada lado)
     for categoria in ordem_categorias:
         jogadores_grupo = grupos[categoria]
         if jogadores_grupo:
             distribuir_grupo_para_listas(jogadores_grupo, time_1_objs, time_2_objs)
 
-    # Marca Titulares (primeiros 11 que entraram no time) e Reservas (12º em diante)
     for i, obj in enumerate(time_1_objs):
         obj["status"] = 1 if i < 11 else 2
     for i, obj in enumerate(time_2_objs):
         obj["status"] = 1 if i < 11 else 2
 
-    # Função que define o peso de cada jogador para a reordenação final
     def chave_ordenacao(jogador):
-        # 1º Critério: Status (1 para Titular, 2 para Reserva) - Isso garante os primeiros 11 no topo
         val_status = jogador.get("status", 2)
-        
-        # 2º Critério: Categoria (menor número vai pro topo dentro do seu bloco)
         ordem_cat = {"MENSALISTA": 1, "DIARISTA": 2, "CONVIDADO": 3, "CRIANÇA": 4}
-        
-        # 3º Critério: Posição
         ordem_pos = {"ZAGUEIRO": 1, "MEIO CAMPO": 2, "ATACANTE": 3}
-        
+
         val_cat = ordem_cat.get(jogador["categoria"], 99)
         val_pos = ordem_pos.get(jogador["posicao"], 99)
-        
+
         return (val_status, val_cat, val_pos)
 
-    # Reordena o Time 1 e o Time 2 independentemente para exibição
     time_1_objs.sort(key=chave_ordenacao)
     time_2_objs.sort(key=chave_ordenacao)
 
-    # Extrai apenas os nomes e remove possíveis vazios
     time_1 = [obj["nome"] for obj in time_1_objs if str(obj["nome"]).strip()]
     time_2 = [obj["nome"] for obj in time_2_objs if str(obj["nome"]).strip()]
 
@@ -1033,8 +1066,6 @@ try:
         df_cadastro["POSICAO"] = df_cadastro["POSICAO"].astype(str).str.strip()
         df_cadastro = df_cadastro[df_cadastro["NOME"] != ""].reset_index(drop=True)
 
-        # st.markdown("### Jogadores cadastrados")
-
         if df_cadastro.empty:
             st.info("Nenhum jogador cadastrado ainda.")
         else:
@@ -1100,7 +1131,6 @@ try:
                 st.info("Nenhum jogador disponível na lista de presença. Cadastre jogadores na aba CADASTRO DE JOGADORES.")
             else:
                 st.markdown("<div class='sereno-card-presenca'>", unsafe_allow_html=True)
-                # st.markdown("<div class='sereno-secao-titulo'>Marcação de Presença</div>", unsafe_allow_html=True)
 
                 for _, row in df_presenca.iterrows():
                     nome = normalizar_nome(row["NOME"])
@@ -1118,7 +1148,7 @@ try:
         if st.button("🔄 Atualizar Dados", use_container_width=True):
             limpar_cache_planilha()
             st.rerun()
-            
+
         if st.session_state.admin_autenticado:
             col1, col2 = st.columns(2)
 
@@ -1196,8 +1226,13 @@ try:
         if df_sorteio.empty:
             st.info("Ainda não há sorteio realizado.")
         else:
-            # st.markdown("### Resultado do sorteio")
-            exibir_tabela_html(df_sorteio[["Ordem", "Time A", "Time B"]], centralizar_colunas=["Ordem", "Time A", "Time B"])
+            exibir_tabela_html(
+                df_sorteio[["Ordem", "Time A", "Time B"]],
+                centralizar_colunas=["Ordem", "Time A", "Time B"]
+            )
+
+            link_whatsapp = gerar_link_whatsapp_sorteio(df_sorteio)
+            st.link_button("Abrir resumo no WhatsApp", link_whatsapp, use_container_width=True)
 
     # ======================================================
     # LOGO NO FINAL DA PÁGINA
