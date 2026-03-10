@@ -1,5 +1,7 @@
 import random
 import time
+from pathlib import Path
+
 import streamlit as st
 import gspread
 import pandas as pd
@@ -44,6 +46,207 @@ ADMIN_SENHA = "sereno"
 # ==========================================================
 TEMPO_BLOQUEIO_SORTEIO_SEGUNDOS = 10 * 60
 SENHA_MASTER_SORTEIO = "123"
+
+# ==========================================================
+# ESTILO
+# ==========================================================
+def aplicar_estilo_global():
+    st.markdown(
+        """
+        <style>
+        .block-container {
+            padding-top: 1.2rem;
+            padding-bottom: 2rem;
+        }
+
+        .sereno-topo {
+            background: linear-gradient(135deg, #fff8f2 0%, #fff 45%, #fff7ef 100%);
+            border: 1px solid #f0e1d1;
+            border-radius: 22px;
+            padding: 18px 22px;
+            margin-bottom: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.05);
+        }
+
+        .sereno-titulo {
+            font-size: 2.3rem;
+            font-weight: 800;
+            color: #171717;
+            margin: 0;
+            line-height: 1.1;
+        }
+
+        .sereno-subtitulo {
+            font-size: 1rem;
+            color: #6b7280;
+            margin-top: 8px;
+            margin-bottom: 0;
+        }
+
+        .sereno-card {
+            background: #ffffff;
+            border: 1px solid #ececec;
+            border-radius: 18px;
+            padding: 16px 18px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.04);
+            margin-bottom: 14px;
+        }
+
+        .sereno-card-presenca {
+            background: linear-gradient(180deg, #fffaf5 0%, #ffffff 100%);
+            border: 2px solid #f6b26b;
+            border-radius: 18px;
+            padding: 16px 18px 8px 18px;
+            box-shadow: 0 6px 18px rgba(245, 158, 11, 0.10);
+            margin-bottom: 14px;
+        }
+
+        .sereno-tabela-wrapper {
+            overflow-x: auto;
+            border: 1px solid #ececec;
+            border-radius: 16px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.04);
+            background: #fff;
+        }
+
+        table.sereno-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.97rem;
+        }
+
+        table.sereno-table thead th {
+            background: #111827;
+            color: #ffffff;
+            text-align: left;
+            padding: 12px 14px;
+            font-weight: 700;
+            border-bottom: 1px solid #111827;
+            white-space: nowrap;
+        }
+
+        table.sereno-table tbody td {
+            padding: 11px 14px;
+            border-bottom: 1px solid #efefef;
+            white-space: nowrap;
+        }
+
+        table.sereno-table tbody tr:nth-child(odd) {
+            background: #fafafa;
+        }
+
+        table.sereno-table tbody tr:nth-child(even) {
+            background: #ffffff;
+        }
+
+        table.sereno-table tbody tr:hover {
+            background: #fff4e8;
+        }
+
+        .sereno-centralizado {
+            text-align: center !important;
+        }
+
+        .sereno-presenca-box {
+            background: #fff;
+            border: 1px solid #f0e1d1;
+            border-radius: 16px;
+            padding: 8px 14px 2px 14px;
+            margin-top: 8px;
+        }
+
+        .sereno-secao-titulo {
+            font-size: 1.12rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #111827;
+        }
+
+        .sereno-logo-box {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 160px;
+        }
+
+        div[data-testid="stMetric"] {
+            background: #ffffff;
+            border: 1px solid #ececec;
+            border-radius: 16px;
+            padding: 10px 12px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.04);
+        }
+
+        div[data-testid="stForm"] {
+            background: #ffffff;
+            border: 1px solid #ececec;
+            border-radius: 18px;
+            padding: 14px 14px 8px 14px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.04);
+        }
+
+        div.stButton > button {
+            border-radius: 12px !important;
+            font-weight: 700 !important;
+        }
+
+        div[data-baseweb="select"] > div {
+            border-radius: 12px !important;
+        }
+
+        .stTabs [data-baseweb="tab-list"] {
+            gap: 10px;
+        }
+
+        .stTabs [data-baseweb="tab"] {
+            height: 44px;
+            border-radius: 12px 12px 0 0;
+            font-weight: 700;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+def formatar_opcao_vazia(texto):
+    return "Selecione..." if texto == "" else texto
+
+def render_table_html(df, centralizar_colunas=None):
+    if df.empty:
+        return "<div class='sereno-card'>Sem dados.</div>"
+
+    centralizar_colunas = centralizar_colunas or []
+
+    colunas_html = ""
+    for col in df.columns:
+        classe = "sereno-centralizado" if col in centralizar_colunas else ""
+        colunas_html += f"<th class='{classe}'>{col}</th>"
+
+    linhas_html = ""
+    for _, row in df.iterrows():
+        linhas_html += "<tr>"
+        for col in df.columns:
+            valor = row[col]
+            valor = "" if pd.isna(valor) else str(valor)
+            classe = "sereno-centralizado" if col in centralizar_colunas else ""
+            linhas_html += f"<td class='{classe}'>{valor}</td>"
+        linhas_html += "</tr>"
+
+    return f"""
+    <div class="sereno-tabela-wrapper">
+        <table class="sereno-table">
+            <thead>
+                <tr>{colunas_html}</tr>
+            </thead>
+            <tbody>
+                {linhas_html}
+            </tbody>
+        </table>
+    </div>
+    """
+
+def exibir_tabela_html(df, centralizar_colunas=None):
+    st.markdown(render_table_html(df, centralizar_colunas), unsafe_allow_html=True)
 
 # ==========================================================
 # UTILITÁRIOS DE RESILIÊNCIA
@@ -97,38 +300,6 @@ def ler_valores_aba_cacheado(nome_aba):
     _, mapa_abas = conectar_gsheet()
     ws = obter_worksheet(mapa_abas, nome_aba)
     return executar_com_retry(ws.get_all_values)
-
-# ==========================================================
-# FUNÇÕES DE ESTILO
-# ==========================================================
-def formatar_opcao_vazia(texto):
-    return "Selecione..." if texto == "" else texto
-
-def estilizar_dataframe(df):
-    if df.empty:
-        return df
-
-    def aplicar_listras(row):
-        cor = "#f7f7f7" if row.name % 2 == 0 else "#ffffff"
-        return [f"background-color: {cor}"] * len(row)
-
-    styler = df.style.apply(aplicar_listras, axis=1)
-
-    try:
-        styler = styler.hide(axis="index")
-    except Exception:
-        try:
-            styler = styler.hide_index()
-        except Exception:
-            pass
-
-    return styler
-
-def exibir_tabela_estilizada(df):
-    if df.empty:
-        st.dataframe(df, use_container_width=True, hide_index=True)
-    else:
-        st.dataframe(estilizar_dataframe(df), use_container_width=True)
 
 # ==========================================================
 # FUNÇÕES DE LEITURA/ESCRITA
@@ -496,6 +667,11 @@ if "pendente_excluir_jogador" not in st.session_state:
     st.session_state.pendente_excluir_jogador = ""
 
 # ==========================================================
+# ESTILO
+# ==========================================================
+aplicar_estilo_global()
+
+# ==========================================================
 # SIDEBAR - LOGIN ADMIN
 # ==========================================================
 with st.sidebar:
@@ -518,7 +694,7 @@ with st.sidebar:
         if st.session_state.admin_erro_login:
             st.error(st.session_state.admin_erro_login)
 
-        st.info("Sem login de administrador, o app ficará apenas em modo de visualização.")
+        st.info("Sem login, o app fica em modo visualização.")
     else:
         st.success("Login autenticado.")
         st.write(f"Usuário: {ADMIN_USUARIO}")
@@ -529,10 +705,34 @@ with st.sidebar:
             st.rerun()
 
 # ==========================================================
+# TOPO
+# ==========================================================
+logo_path = Path("SERENO FC.png")
+
+col_logo, col_titulo = st.columns([1, 3])
+
+with col_logo:
+    st.markdown("<div class='sereno-logo-box'>", unsafe_allow_html=True)
+    if logo_path.exists():
+        st.image(str(logo_path), use_container_width=True)
+    st.markdown("</div>", unsafe_allow_html=True)
+
+with col_titulo:
+    st.markdown(
+        """
+        <div class="sereno-topo">
+            <p class="sereno-titulo">Sereno F.C.</p>
+            <p class="sereno-subtitulo">
+                Sistema de cadastro, presença e sorteio de times
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+# ==========================================================
 # APP
 # ==========================================================
-st.title("Sereno F.C.")
-
 try:
     planilha, mapa_abas = conectar_gsheet()
 
@@ -548,8 +748,6 @@ try:
     abas = st.tabs(["CADASTRO DE JOGADORES", "LISTA DE PRESENCA", "SORTEIO DOS TIMES"])
 
     with abas[0]:
-        st.subheader("")
-
         df_cadastro = ler_aba_com_cabecalho(mapa_abas, ABA_CADASTRO, COLUNAS_CADASTRO)
         df_cadastro["NOME"] = df_cadastro["NOME"].astype(str).str.strip()
         df_cadastro["POSICAO"] = df_cadastro["POSICAO"].astype(str).str.strip()
@@ -610,7 +808,7 @@ try:
             df_exibir["CATEGORIA"] = df_exibir.apply(
                 lambda row: descobrir_categoria_jogador(row.to_dict()), axis=1
             )
-            exibir_tabela_estilizada(df_exibir[["NOME", "CATEGORIA", "POSICAO"]])
+            exibir_tabela_html(df_exibir[["NOME", "CATEGORIA", "POSICAO"]])
 
             if st.session_state.admin_autenticado:
                 st.markdown("### Atualizar jogador")
@@ -703,13 +901,18 @@ try:
                                 st.rerun()
 
     with abas[1]:
-        st.subheader("")
-
         df_presenca = sincronizar_lista_presenca(mapa_abas, forcar_gravacao=False)
         df_presenca["NOME"] = df_presenca["NOME"].astype(str).str.strip()
         df_presenca = df_presenca[df_presenca["NOME"] != ""].reset_index(drop=True)
 
         inicializar_estado_checkboxes_presenca(df_presenca)
+
+        qtd_presentes = int((df_presenca["PRESENCA"].astype(str).str.upper().str.strip() == "SIM").sum()) if not df_presenca.empty else 0
+        qtd_ausentes = int((df_presenca["PRESENCA"].astype(str).str.upper().str.strip() != "SIM").sum()) if not df_presenca.empty else 0
+
+        c1, c2 = st.columns(2)
+        c1.metric("Presentes", qtd_presentes)
+        c2.metric("Ausentes", qtd_ausentes)
 
         if st.session_state.admin_autenticado:
             col1, col2, col3 = st.columns(3)
@@ -746,10 +949,14 @@ try:
             if df_presenca.empty:
                 st.info("Nenhum jogador disponível na lista de presença. Cadastre jogadores na aba CADASTRO DE JOGADORES.")
             else:
-                st.markdown("### Marcação de presença")
+                st.markdown("<div class='sereno-card-presenca'>", unsafe_allow_html=True)
+                st.markdown("<div class='sereno-secao-titulo'>Marcação de presença</div>", unsafe_allow_html=True)
+                st.markdown("<div class='sereno-presenca-box'>", unsafe_allow_html=True)
                 for _, row in df_presenca.iterrows():
                     nome = normalizar_nome(row["NOME"])
                     st.checkbox(nome, key=chave_checkbox_presenca(nome))
+                st.markdown("</div>", unsafe_allow_html=True)
+                st.markdown("</div>", unsafe_allow_html=True)
         else:
             st.warning("Alterações de presença restritas ao administrador.")
 
@@ -757,11 +964,9 @@ try:
         if df_presenca.empty:
             st.info("Nenhum jogador disponível na lista de presença.")
         else:
-            exibir_tabela_estilizada(df_presenca)
+            exibir_tabela_html(df_presenca, centralizar_colunas=["PRESENCA"])
 
     with abas[2]:
-        st.subheader("")
-
         if st.session_state.admin_autenticado:
             col1, col2 = st.columns(2)
 
@@ -845,7 +1050,7 @@ try:
             st.info("Ainda não há sorteio realizado.")
         else:
             st.markdown("### Resultado do sorteio")
-            exibir_tabela_estilizada(df_sorteio)
+            exibir_tabela_html(df_sorteio, centralizar_colunas=["ORDEM"])
 
             qtd_time_1 = (df_sorteio["TIME_1"].astype(str).str.strip() != "").sum()
             qtd_time_2 = (df_sorteio["TIME_2"].astype(str).str.strip() != "").sum()
