@@ -891,7 +891,7 @@ with st.sidebar:
                 st.session_state.admin_erro_login = ""
                 st.rerun()
             else:
-                st.session_state.admin_erro_login = "Usuário ou senha inválidos."
+                st.session_state.admin_erro_login = "Usuário ou Senha inválidos!"
 
         if st.session_state.admin_erro_login:
             st.error(st.session_state.admin_erro_login)
