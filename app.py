@@ -827,10 +827,10 @@ try:
         st.session_state.abas_inicializadas = True
 
     abas = st.tabs([
-        "CADASTRO DE JOGADORES",
-        "JOGADORES CADASTRADOS",
-        "LISTA DE PRESENCA",
-        "SORTEIO DOS TIMES"
+        "CADASTRO",
+        "JOGADORES",
+        "PRESENCA",
+        "SORTEIO"
     ])
 
     # ======================================================
