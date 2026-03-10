@@ -58,7 +58,7 @@ def executar_com_retry(func, *args, **kwargs):
 # ==========================================================
 # CONEXÃO
 # ==========================================================
-@st.cache_data(ttl=30)
+@st.cache_resource
 def conectar_gsheet():
     creds = Credentials.from_service_account_info(
         INFO_CREDENCIAIS,
