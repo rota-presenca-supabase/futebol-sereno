@@ -1233,6 +1233,10 @@ try:
 
             link_whatsapp = gerar_link_whatsapp_sorteio(df_sorteio)
             st.link_button("RESUMO PARA WHATSAPP", link_whatsapp, use_container_width=True)
+            st.markdown(
+                "<div style='text-align:center; font-size:1rem; font-weight:600; color:#374151; margin-top:10px;'>App criado por: Teori@ - Sereno FC</div>",
+                unsafe_allow_html=True
+            )
 
     # ======================================================
     # LOGO NO FINAL DA PÁGINA
