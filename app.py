@@ -508,14 +508,18 @@ try:
 
         if st.session_state.admin_autenticado:
             st.markdown("### Adicionar novo jogador")
+
             with st.form("form_cadastro"):
                 nome_jogador = st.text_input("Nome do jogador")
+
+                posicao = st.selectbox("Posição", OPCOES_POSICAO)
+
                 categoria = st.radio(
                     "Categoria",
                     ["MENSALISTA", "DIARISTA", "CONVIDADO", "PEQUENO_JOGADOR"],
                     horizontal=True
                 )
-                posicao = st.selectbox("Posição", OPCOES_POSICAO)
+
                 enviar_cadastro = st.form_submit_button("Salvar jogador")
 
             if enviar_cadastro:
