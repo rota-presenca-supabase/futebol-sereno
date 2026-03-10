@@ -471,7 +471,7 @@ with st.sidebar:
 
         st.info("Sem login de administrador, o app ficará apenas em modo de visualização.")
     else:
-        st.success("Administrador autenticado.")
+        st.success("Login autenticado.")
         st.write(f"Usuário: {ADMIN_USUARIO}")
 
         if st.button("Sair do modo administrador", use_container_width=True):
