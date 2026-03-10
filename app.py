@@ -1196,7 +1196,7 @@ try:
         if df_sorteio.empty:
             st.info("Ainda não há sorteio realizado.")
         else:
-            st.markdown("### Resultado do sorteio")
+            # st.markdown("### Resultado do sorteio")
             exibir_tabela_html(df_sorteio[["ORDEM", "Time A", "Time B"]], centralizar_colunas=["ORDEM", "Time A", "Time B"])
 
     # ======================================================
