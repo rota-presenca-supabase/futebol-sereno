@@ -9,7 +9,7 @@ from gspread.exceptions import APIError, SpreadsheetNotFound
 # ==========================================================
 # CONFIGURAÇÃO DA PÁGINA
 # ==========================================================
-st.set_page_config(page_title="FUTEBOL_SERENO", layout="wide")
+st.set_page_config(page_title="SERENO FC", layout="wide")
 
 # ==========================================================
 # CONFIGURAÇÕES GERAIS
