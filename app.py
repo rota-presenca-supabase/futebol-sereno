@@ -195,7 +195,7 @@ def aplicar_estilo_global():
         /* Mirando diretamente no texto da guia para forçar tamanho */
         button[data-baseweb="tab"] p,
         div[data-testid="stTabs"] button p {
-            font-size: 1.15rem !important; /* Mantém o tamanho levemente maior */
+            font-size: 1.05rem !important; /* Mantém o tamanho levemente maior */
         }
 
         div[data-testid="stCheckbox"] {
