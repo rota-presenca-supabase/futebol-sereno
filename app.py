@@ -1066,7 +1066,7 @@ try:
 
             with col1:
                 st.markdown('<div id="btn-salvar-presenca" style="display:none;"></div>', unsafe_allow_html=True)
-                if st.button("Salvar presença", use_container_width=True):
+                if st.button("Salvar Presenças", use_container_width=True):
                     novo_df_presenca = construir_df_presenca_a_partir_dos_checkboxes(df_presenca)
                     escrever_dataframe_na_aba(mapa_abas, ABA_PRESENCA, novo_df_presenca, COLUNAS_PRESENCA)
                     aplicar_df_presenca_ao_estado(novo_df_presenca)
@@ -1076,7 +1076,7 @@ try:
 
             with col2:
                 st.markdown('<div id="btn-marcar-sim" style="display:none;"></div>', unsafe_allow_html=True)
-                if st.button("Marcar todos como SIM", use_container_width=True):
+                if st.button("Marcar Todos", use_container_width=True):
                     if not df_presenca.empty:
                         df_presenca["PRESENCA"] = "SIM"
                         escrever_dataframe_na_aba(mapa_abas, ABA_PRESENCA, df_presenca, COLUNAS_PRESENCA)
@@ -1087,7 +1087,7 @@ try:
 
             with col3:
                 st.markdown('<div id="btn-marcar-nao" style="display:none;"></div>', unsafe_allow_html=True)
-                if st.button("Marcar todos como NÃO", use_container_width=True):
+                if st.button("Desmarcar Todos", use_container_width=True):
                     if not df_presenca.empty:
                         df_presenca["PRESENCA"] = "NÃO"
                         escrever_dataframe_na_aba(mapa_abas, ABA_PRESENCA, df_presenca, COLUNAS_PRESENCA)
