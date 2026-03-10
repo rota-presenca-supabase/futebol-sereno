@@ -58,7 +58,7 @@ def executar_com_retry(func, *args, **kwargs):
 # ==========================================================
 # CONEXÃO
 # ==========================================================
-@st.cache_resource
+@st.cache_data(ttl=30)
 def conectar_gsheet():
     creds = Credentials.from_service_account_info(
         INFO_CREDENCIAIS,
@@ -405,7 +405,7 @@ try:
             df_exibir["CATEGORIA"] = df_exibir.apply(
                 lambda row: descobrir_categoria_jogador(row.to_dict()), axis=1
             )
-            st.dataframe(df_exibir[["NOME", "CATEGORIA"]], use_container_width=True)
+            st.dataframe(df_exibir[["NOME", "CATEGORIA"]], use_container_width=True, hide_index=True)
 
             if st.session_state.admin_autenticado:
                 st.markdown("### Atualizar categoria de jogador")
@@ -520,7 +520,7 @@ try:
         if df_presenca.empty:
             st.info("Nenhum jogador disponível na lista de presença.")
         else:
-            st.dataframe(df_presenca, use_container_width=True)
+            st.dataframe(df_presenca, use_container_width=True, hide_index=True)
 
     # ======================================================
     # ABA 3 - SORTEIO
@@ -579,7 +579,7 @@ try:
             st.info("Ainda não há sorteio realizado.")
         else:
             st.markdown("### Resultado do sorteio")
-            st.dataframe(df_sorteio, use_container_width=True)
+            st.dataframe(df_sorteio, use_container_width=True, hide_index=True)
 
             qtd_time_1 = (df_sorteio["TIME_1"].astype(str).str.strip() != "").sum()
             qtd_time_2 = (df_sorteio["TIME_2"].astype(str).str.strip() != "").sum()
