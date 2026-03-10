@@ -220,7 +220,9 @@ def aplicar_estilo_global():
         div.element-container:has(#btn-atualizar-jogador),
         div.element-container:has(#btn-excluir-jogador),
         div.element-container:has(#btn-confirmar-exclusao),
-        div.element-container:has(#btn-cancelar-exclusao) {
+        div.element-container:has(#btn-cancelar-exclusao),
+        div.element-container:has(#btn-autorizar-senha),
+        div.element-container:has(#btn-cancelar-senha) {
             display: none !important;
         }
 
@@ -263,6 +265,14 @@ def aplicar_estilo_global():
             background-color: #fee2e2 !important; border-color: #fecaca !important; color: #991b1b !important;
         }
         div.element-container:has(#btn-cancelar-exclusao) + div.element-container button {
+            background-color: #f3f4f6 !important; border-color: #e5e7eb !important; color: #1f2937 !important;
+        }
+
+        /* Cores Cirúrgicas para a Senha Master */
+        div.element-container:has(#btn-autorizar-senha) + div.element-container button {
+            background-color: #d1fae5 !important; border-color: #a7f3d0 !important; color: #065f46 !important;
+        }
+        div.element-container:has(#btn-cancelar-senha) + div.element-container button {
             background-color: #f3f4f6 !important; border-color: #e5e7eb !important; color: #1f2937 !important;
         }
         </style>
@@ -785,6 +795,27 @@ def anexar_timestamp_sorteio(df_sorteio, timestamp_str):
     df_sorteio.at[0, "SORTEIO"] = timestamp_str
     return df_sorteio[COLUNAS_SORTEIO]
 
+def realizar_limpeza_sorteio(mapa_abas, msg_sucesso="Sorteio limpo com sucesso."):
+    ultimo_dt = obter_ultimo_timestamp_sorteio(mapa_abas)
+    timestamp_str = formatar_timestamp_sorteio(ultimo_dt) if ultimo_dt else ""
+
+    if timestamp_str:
+        df_vazio = pd.DataFrame(
+            [{"Ordem": "", "Time A": "", "Time B": "", "SORTEIO": timestamp_str}],
+            columns=COLUNAS_SORTEIO
+        )
+    else:
+        df_vazio = pd.DataFrame(columns=COLUNAS_SORTEIO)
+
+    escrever_dataframe_na_aba(mapa_abas, ABA_SORTEIO, df_vazio, COLUNAS_SORTEIO)
+
+    st.session_state.exigir_senha_master_acao = False
+    st.session_state.erro_senha_master_acao = ""
+    st.session_state.tipo_acao_pendente = ""
+
+    st.success(msg_sucesso)
+    st.rerun()
+
 def realizar_sorteio(mapa_abas):
     df_cadastro = ler_aba_com_cabecalho(mapa_abas, ABA_CADASTRO, COLUNAS_CADASTRO)
     df_presenca = ler_aba_com_cabecalho(mapa_abas, ABA_PRESENCA, COLUNAS_PRESENCA)
@@ -808,7 +839,7 @@ def realizar_sorteio(mapa_abas):
         return
 
     if presentes_sim.empty:
-        st.error("Nenhum jogador foi marcado como presente.")
+        realizar_limpeza_sorteio(mapa_abas, msg_sucesso="Sorteio limpo, pois nenhum jogador foi marcado como presente.")
         return
 
     df_sorteio = sortear_times(df_cadastro, df_presenca)
@@ -821,27 +852,6 @@ def realizar_sorteio(mapa_abas):
     st.session_state.tipo_acao_pendente = ""
 
     st.success("Sorteio realizado com sucesso.")
-    st.rerun()
-
-def realizar_limpeza_sorteio(mapa_abas):
-    ultimo_dt = obter_ultimo_timestamp_sorteio(mapa_abas)
-    timestamp_str = formatar_timestamp_sorteio(ultimo_dt) if ultimo_dt else ""
-
-    if timestamp_str:
-        df_vazio = pd.DataFrame(
-            [{"Ordem": "", "Time A": "", "Time B": "", "SORTEIO": timestamp_str}],
-            columns=COLUNAS_SORTEIO
-        )
-    else:
-        df_vazio = pd.DataFrame(columns=COLUNAS_SORTEIO)
-
-    escrever_dataframe_na_aba(mapa_abas, ABA_SORTEIO, df_vazio, COLUNAS_SORTEIO)
-
-    st.session_state.exigir_senha_master_acao = False
-    st.session_state.erro_senha_master_acao = ""
-    st.session_state.tipo_acao_pendente = ""
-
-    st.success("Sorteio limpo com sucesso.")
     st.rerun()
 
 # ==========================================================
@@ -889,6 +899,8 @@ with st.sidebar:
             if usuario_admin == ADMIN_USUARIO and senha_admin == ADMIN_SENHA:
                 st.session_state.admin_autenticado = True
                 st.session_state.admin_erro_login = ""
+                # Limpa o cache imediatamente para puxar presenças frescas no login
+                limpar_cache_planilha()
                 st.rerun()
             else:
                 st.session_state.admin_erro_login = "Usuário ou Senha inválidos!"
@@ -1224,6 +1236,7 @@ try:
                     c1, c2 = st.columns(2)
 
                     with c1:
+                        st.markdown('<div id="btn-autorizar-senha" style="display:none;"></div>', unsafe_allow_html=True)
                         if st.button("Autorizar", use_container_width=True):
                             if senha_master_digitada == SENHA_MASTER_SORTEIO:
                                 st.session_state.exigir_senha_master_acao = False
@@ -1237,6 +1250,7 @@ try:
                                 st.session_state.erro_senha_master_acao = "Senha master inválida."
 
                     with c2:
+                        st.markdown('<div id="btn-cancelar-senha" style="display:none;"></div>', unsafe_allow_html=True)
                         if st.button("Cancelar", use_container_width=True):
                             st.session_state.exigir_senha_master_acao = False
                             st.session_state.erro_senha_master_acao = ""
