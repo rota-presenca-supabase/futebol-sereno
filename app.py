@@ -673,17 +673,27 @@ def sortear_times(df_cadastro, df_presenca):
         if jogadores_grupo:
             distribuir_grupo_para_listas(jogadores_grupo, time_1_objs, time_2_objs)
 
+    # Marca Titulares (primeiros 11 que entraram no time) e Reservas (12º em diante)
+    for i, obj in enumerate(time_1_objs):
+        obj["status"] = 1 if i < 11 else 2
+    for i, obj in enumerate(time_2_objs):
+        obj["status"] = 1 if i < 11 else 2
+
     # Função que define o peso de cada jogador para a reordenação final
     def chave_ordenacao(jogador):
-        # 1º Critério: Categoria (menor número vai pro topo)
+        # 1º Critério: Status (1 para Titular, 2 para Reserva) - Isso garante os primeiros 11 no topo
+        val_status = jogador.get("status", 2)
+        
+        # 2º Critério: Categoria (menor número vai pro topo dentro do seu bloco)
         ordem_cat = {"MENSALISTA": 1, "DIARISTA": 2, "CONVIDADO": 3, "PEQUENO_JOGADOR": 4}
-        # 2º Critério: Posição
+        
+        # 3º Critério: Posição
         ordem_pos = {"ZAGUEIRO": 1, "MEIO CAMPO": 2, "ATACANTE": 3}
         
         val_cat = ordem_cat.get(jogador["categoria"], 99)
         val_pos = ordem_pos.get(jogador["posicao"], 99)
         
-        return (val_cat, val_pos)
+        return (val_status, val_cat, val_pos)
 
     # Reordena o Time 1 e o Time 2 independentemente para exibição
     time_1_objs.sort(key=chave_ordenacao)
