@@ -474,7 +474,7 @@ with st.sidebar:
         st.success("Login autenticado.")
         st.write(f"Usuário: {ADMIN_USUARIO}")
 
-        if st.button("Sair do modo administrador", use_container_width=True):
+        if st.button("Sair", use_container_width=True):
             st.session_state.admin_autenticado = False
             st.session_state.admin_erro_login = ""
             st.rerun()
