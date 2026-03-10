@@ -9,7 +9,7 @@ from gspread.exceptions import APIError, SpreadsheetNotFound
 # ==========================================================
 # CONFIGURAÇÃO DA PÁGINA
 # ==========================================================
-st.set_page_config(page_title="SERENO FC", layout="wide")
+st.set_page_config(page_title="FUTEBOL_SERENO", layout="wide")
 
 # ==========================================================
 # CONFIGURAÇÕES GERAIS
@@ -337,7 +337,7 @@ with st.sidebar:
 # ==========================================================
 # APP
 # ==========================================================
-st.title("FUTEBOL_SERENO")
+st.title("SERENO FC")
 
 try:
     planilha, mapa_abas = conectar_gsheet()
