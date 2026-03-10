@@ -75,7 +75,7 @@ def aplicar_estilo_global():
         }
 
         .sereno-titulo {
-            font-size: 4.95rem !important; /* Aumentado mais 50% e forçado */
+            font-size: 3.0rem !important; /* Reduzido em 40% conforme solicitado */
             font-weight: 900 !important; /* Forçado para negrito máximo */
             color: #111827;
             margin: 0;
@@ -192,11 +192,10 @@ def aplicar_estilo_global():
             border-radius: 12px 12px 0 0;
         }
 
-        /* Mirando diretamente no texto da guia para forçar tamanho e negrito */
+        /* Mirando diretamente no texto da guia para forçar tamanho */
         button[data-baseweb="tab"] p,
         div[data-testid="stTabs"] button p {
-            font-size: 1.15rem !important; /* Aumentado 15% */
-            font-weight: 800 !important; /* Negrito forçado */
+            font-size: 1.15rem !important; /* Mantém o tamanho levemente maior */
         }
 
         div[data-testid="stCheckbox"] {
