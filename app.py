@@ -607,7 +607,7 @@ try:
                     st.rerun()
 
     with abas[1]:
-        st.subheader("Lista de presença")
+        st.subheader("")
 
         df_presenca = sincronizar_lista_presenca(mapa_abas, forcar_gravacao=False)
         df_presenca["NOME"] = df_presenca["NOME"].astype(str).str.strip()
