@@ -351,7 +351,7 @@ try:
     else:
         st.info("Modo visualização ativo. Faça login na barra lateral para alterar dados.")
 
-    abas = st.tabs(["CADASTRO DE JOGADORES", "LISTA_PRESENCA", "LISTA_SORTEIO"])
+    abas = st.tabs(["CADASTRO DE JOGADORES", "LISTA DE PRESENCA", "SORTEIO DOS TIMES"])
 
     with abas[0]:
         st.subheader("Cadastro de jogadores")
@@ -483,7 +483,7 @@ try:
                     st.rerun()
 
             if df_presenca.empty:
-                st.info("Nenhum jogador disponível na lista de presença. Cadastre jogadores na aba CADASTRO_JOGADORES.")
+                st.info("Nenhum jogador disponível na lista de presença. Cadastre jogadores na aba CADASTRO DE JOGADORES.")
             else:
                 with st.form("form_presenca"):
                     novos_valores = []
