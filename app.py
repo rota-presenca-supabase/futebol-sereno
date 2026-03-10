@@ -21,9 +21,11 @@ ABA_CADASTRO = "CADASTRO_JOGADORES"
 ABA_PRESENCA = "LISTA_PRESENCA"
 ABA_SORTEIO = "LISTA_SORTEIO"
 
-COLUNAS_CADASTRO = ["NOME", "MENSALISTA", "DIARISTA", "CONVIDADO", "PEQUENO_JOGADOR"]
+COLUNAS_CADASTRO = ["NOME", "MENSALISTA", "DIARISTA", "CONVIDADO", "PEQUENO_JOGADOR", "POSICAO"]
 COLUNAS_PRESENCA = ["NOME", "PRESENCA"]
 COLUNAS_SORTEIO = ["ORDEM", "TIME_1", "TIME_2"]
+
+OPCOES_POSICAO = ["ZAGUEIRO", "MEIO CAMPO", "ATACANTE"]
 
 SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",
@@ -37,7 +39,7 @@ ADMIN_USUARIO = "Administrador"
 ADMIN_SENHA = "Administrador@123"
 
 # ==========================================================
-# CONTROLE DE NOVO SORTEIO
+# CONTROLE DE NOVO SORTEIO / LIMPAR SORTEIO
 # ==========================================================
 TEMPO_BLOQUEIO_SORTEIO_SEGUNDOS = 10 * 60
 SENHA_MASTER_SORTEIO = "123"
@@ -176,16 +178,21 @@ def inicializar_abas_se_necessario(mapa_abas):
 def normalizar_nome(nome):
     return str(nome).strip()
 
+def normalizar_posicao(posicao):
+    p = str(posicao).strip().upper()
+    return p if p in OPCOES_POSICAO else ""
+
 def chave_checkbox_presenca(nome):
     return f"presenca_checkbox::{normalizar_nome(nome)}"
 
-def montar_linha_cadastro(nome, categoria):
+def montar_linha_cadastro(nome, categoria, posicao):
     return {
         "NOME": nome,
         "MENSALISTA": "SIM" if categoria == "MENSALISTA" else "NÃO",
         "DIARISTA": "SIM" if categoria == "DIARISTA" else "NÃO",
         "CONVIDADO": "SIM" if categoria == "CONVIDADO" else "NÃO",
         "PEQUENO_JOGADOR": "SIM" if categoria == "PEQUENO_JOGADOR" else "NÃO",
+        "POSICAO": posicao,
     }
 
 def descobrir_categoria_jogador(linha):
@@ -291,7 +298,8 @@ def sortear_times(df_cadastro, df_presenca):
         nome = normalizar_nome(row["NOME"])
         if nome:
             cadastro_map[nome] = {
-                "categoria": descobrir_categoria_jogador(row.to_dict())
+                "categoria": descobrir_categoria_jogador(row.to_dict()),
+                "posicao": normalizar_posicao(row.to_dict().get("POSICAO", ""))
             }
 
     presentes = []
@@ -301,23 +309,26 @@ def sortear_times(df_cadastro, df_presenca):
         if nome and presenca == "SIM" and nome in cadastro_map:
             presentes.append({
                 "nome": nome,
-                "categoria": cadastro_map[nome]["categoria"]
+                "categoria": cadastro_map[nome]["categoria"],
+                "posicao": cadastro_map[nome]["posicao"]
             })
 
     grupos = {
-        "MENSALISTA": [],
-        "DIARISTA": [],
-        "CONVIDADO": [],
-        "PEQUENO_JOGADOR": []
+        "MENSALISTA": {"ZAGUEIRO": [], "MEIO CAMPO": [], "ATACANTE": []},
+        "DIARISTA": {"ZAGUEIRO": [], "MEIO CAMPO": [], "ATACANTE": []},
+        "CONVIDADO": {"ZAGUEIRO": [], "MEIO CAMPO": [], "ATACANTE": []},
+        "PEQUENO_JOGADOR": {"ZAGUEIRO": [], "MEIO CAMPO": [], "ATACANTE": []},
     }
 
     for jogador in presentes:
         categoria = jogador["categoria"]
-        if categoria in grupos:
-            grupos[categoria].append(jogador["nome"])
+        posicao = jogador["posicao"]
+        if categoria in grupos and posicao in grupos[categoria]:
+            grupos[categoria][posicao].append(jogador["nome"])
 
     for categoria in grupos:
-        random.shuffle(grupos[categoria])
+        for posicao in grupos[categoria]:
+            random.shuffle(grupos[categoria][posicao])
 
     time_1 = []
     time_2 = []
@@ -341,10 +352,12 @@ def sortear_times(df_cadastro, df_presenca):
                 proximo_time = 1
 
     ordem_categorias = ["MENSALISTA", "DIARISTA", "CONVIDADO", "PEQUENO_JOGADOR"]
+    ordem_posicoes = ["ZAGUEIRO", "MEIO CAMPO", "ATACANTE"]
 
     for categoria in ordem_categorias:
-        for nome_jogador in grupos[categoria]:
-            adicionar_jogador(nome_jogador)
+        for posicao in ordem_posicoes:
+            for nome_jogador in grupos[categoria][posicao]:
+                adicionar_jogador(nome_jogador)
 
     max_len = max(len(time_1), len(time_2), 0)
     linhas_sorteio = []
@@ -389,11 +402,24 @@ def realizar_sorteio(mapa_abas):
     escrever_dataframe_na_aba(mapa_abas, ABA_SORTEIO, df_sorteio, COLUNAS_SORTEIO)
 
     st.session_state.ultimo_sorteio_ts = time.time()
-    st.session_state.exigir_senha_master_sorteio = False
-    st.session_state.erro_senha_master_sorteio = ""
+    st.session_state.exigir_senha_master_acao = False
+    st.session_state.erro_senha_master_acao = ""
+    st.session_state.tipo_acao_pendente = ""
 
     limpar_cache_planilha()
     st.success("Sorteio realizado com sucesso.")
+    st.rerun()
+
+def realizar_limpeza_sorteio(mapa_abas):
+    df_vazio = pd.DataFrame(columns=COLUNAS_SORTEIO)
+    escrever_dataframe_na_aba(mapa_abas, ABA_SORTEIO, df_vazio, COLUNAS_SORTEIO)
+
+    st.session_state.exigir_senha_master_acao = False
+    st.session_state.erro_senha_master_acao = ""
+    st.session_state.tipo_acao_pendente = ""
+
+    limpar_cache_planilha()
+    st.success("Sorteio limpo com sucesso.")
     st.rerun()
 
 # ==========================================================
@@ -411,11 +437,14 @@ if "admin_erro_login" not in st.session_state:
 if "ultimo_sorteio_ts" not in st.session_state:
     st.session_state.ultimo_sorteio_ts = None
 
-if "exigir_senha_master_sorteio" not in st.session_state:
-    st.session_state.exigir_senha_master_sorteio = False
+if "exigir_senha_master_acao" not in st.session_state:
+    st.session_state.exigir_senha_master_acao = False
 
-if "erro_senha_master_sorteio" not in st.session_state:
-    st.session_state.erro_senha_master_sorteio = ""
+if "erro_senha_master_acao" not in st.session_state:
+    st.session_state.erro_senha_master_acao = ""
+
+if "tipo_acao_pendente" not in st.session_state:
+    st.session_state.tipo_acao_pendente = ""
 
 # ==========================================================
 # SIDEBAR - LOGIN ADMIN
@@ -474,6 +503,7 @@ try:
 
         df_cadastro = ler_aba_com_cabecalho(mapa_abas, ABA_CADASTRO, COLUNAS_CADASTRO)
         df_cadastro["NOME"] = df_cadastro["NOME"].astype(str).str.strip()
+        df_cadastro["POSICAO"] = df_cadastro["POSICAO"].astype(str).str.strip()
         df_cadastro = df_cadastro[df_cadastro["NOME"] != ""].reset_index(drop=True)
 
         if st.session_state.admin_autenticado:
@@ -485,17 +515,19 @@ try:
                     ["MENSALISTA", "DIARISTA", "CONVIDADO", "PEQUENO_JOGADOR"],
                     horizontal=True
                 )
+                posicao = st.selectbox("Posição", OPCOES_POSICAO)
                 enviar_cadastro = st.form_submit_button("Salvar jogador")
 
             if enviar_cadastro:
                 nome_jogador = normalizar_nome(nome_jogador)
+                posicao = normalizar_posicao(posicao)
 
                 if not nome_jogador:
                     st.error("Informe o nome do jogador.")
                 elif nome_jogador.upper() in [x.upper() for x in df_cadastro["NOME"].tolist()]:
                     st.error("Esse jogador já está cadastrado.")
                 else:
-                    nova_linha = montar_linha_cadastro(nome_jogador, categoria)
+                    nova_linha = montar_linha_cadastro(nome_jogador, categoria, posicao)
                     df_cadastro = pd.concat([df_cadastro, pd.DataFrame([nova_linha])], ignore_index=True)
 
                     escrever_dataframe_na_aba(mapa_abas, ABA_CADASTRO, df_cadastro, COLUNAS_CADASTRO)
@@ -517,31 +549,35 @@ try:
             df_exibir["CATEGORIA"] = df_exibir.apply(
                 lambda row: descobrir_categoria_jogador(row.to_dict()), axis=1
             )
-            st.dataframe(df_exibir[["NOME", "CATEGORIA"]], use_container_width=True, hide_index=True)
+            st.dataframe(df_exibir[["NOME", "CATEGORIA", "POSICAO"]], use_container_width=True, hide_index=True)
 
             if st.session_state.admin_autenticado:
-                st.markdown("### Atualizar categoria de jogador")
+                st.markdown("### Atualizar jogador")
                 nomes_existentes = df_cadastro["NOME"].tolist()
 
                 with st.form("form_editar"):
                     jogador_editar = st.selectbox("Selecione o jogador", nomes_existentes)
-                    categoria_atual = descobrir_categoria_jogador(
-                        df_cadastro[df_cadastro["NOME"] == jogador_editar].iloc[0].to_dict()
-                    )
+                    linha_jogador = df_cadastro[df_cadastro["NOME"] == jogador_editar].iloc[0].to_dict()
+
+                    categoria_atual = descobrir_categoria_jogador(linha_jogador)
+                    posicao_atual = normalizar_posicao(linha_jogador.get("POSICAO", ""))
+
                     opcoes_categoria = ["MENSALISTA", "DIARISTA", "CONVIDADO", "PEQUENO_JOGADOR"]
-                    indice_atual = opcoes_categoria.index(categoria_atual) if categoria_atual in opcoes_categoria else 0
+                    indice_categoria = opcoes_categoria.index(categoria_atual) if categoria_atual in opcoes_categoria else 0
+                    indice_posicao = OPCOES_POSICAO.index(posicao_atual) if posicao_atual in OPCOES_POSICAO else 0
 
                     categoria_editar = st.radio(
                         "Nova categoria",
                         opcoes_categoria,
-                        index=indice_atual,
+                        index=indice_categoria,
                         horizontal=True
                     )
-                    salvar_edicao = st.form_submit_button("Atualizar categoria")
+                    posicao_editar = st.selectbox("Nova posição", OPCOES_POSICAO, index=indice_posicao)
+                    salvar_edicao = st.form_submit_button("Atualizar jogador")
 
                 if salvar_edicao:
                     idx = df_cadastro.index[df_cadastro["NOME"] == jogador_editar][0]
-                    linha_atualizada = montar_linha_cadastro(jogador_editar, categoria_editar)
+                    linha_atualizada = montar_linha_cadastro(jogador_editar, categoria_editar, normalizar_posicao(posicao_editar))
                     for col in COLUNAS_CADASTRO:
                         df_cadastro.at[idx, col] = linha_atualizada[col]
 
@@ -549,7 +585,7 @@ try:
                     sincronizar_lista_presenca(mapa_abas, forcar_gravacao=False)
 
                     limpar_cache_planilha()
-                    st.success("Categoria atualizada com sucesso.")
+                    st.success("Jogador atualizado com sucesso.")
                     st.rerun()
 
                 st.markdown("### Excluir jogador")
@@ -644,55 +680,66 @@ try:
                     if ultimo_sorteio_ts is None or (agora - ultimo_sorteio_ts) >= TEMPO_BLOQUEIO_SORTEIO_SEGUNDOS:
                         realizar_sorteio(mapa_abas)
                     else:
-                        st.session_state.exigir_senha_master_sorteio = True
-                        st.session_state.erro_senha_master_sorteio = ""
+                        st.session_state.exigir_senha_master_acao = True
+                        st.session_state.erro_senha_master_acao = ""
+                        st.session_state.tipo_acao_pendente = "sortear"
 
             with col2:
                 if st.button("Limpar sorteio", use_container_width=True):
-                    df_vazio = pd.DataFrame(columns=COLUNAS_SORTEIO)
-                    escrever_dataframe_na_aba(mapa_abas, ABA_SORTEIO, df_vazio, COLUNAS_SORTEIO)
+                    agora = time.time()
+                    ultimo_sorteio_ts = st.session_state.ultimo_sorteio_ts
 
-                    limpar_cache_planilha()
-                    st.success("Sorteio limpo com sucesso.")
-                    st.rerun()
+                    if ultimo_sorteio_ts is None or (agora - ultimo_sorteio_ts) >= TEMPO_BLOQUEIO_SORTEIO_SEGUNDOS:
+                        realizar_limpeza_sorteio(mapa_abas)
+                    else:
+                        st.session_state.exigir_senha_master_acao = True
+                        st.session_state.erro_senha_master_acao = ""
+                        st.session_state.tipo_acao_pendente = "limpar"
 
-            if st.session_state.exigir_senha_master_sorteio:
+            if st.session_state.exigir_senha_master_acao:
                 agora = time.time()
                 ultimo_sorteio_ts = st.session_state.ultimo_sorteio_ts or 0
                 restante = max(0, TEMPO_BLOQUEIO_SORTEIO_SEGUNDOS - (agora - ultimo_sorteio_ts))
 
+                acao_txt = "novo sorteio" if st.session_state.tipo_acao_pendente == "sortear" else "limpar sorteio"
+
                 st.warning(
-                    f"Um novo sorteio só pode ser feito após 10 minutos. "
+                    f"Essa ação só pode ser feita sem senha após 10 minutos. "
                     f"Tempo restante: {formatar_tempo_restante(restante)}. "
-                    f"Digite a senha master para autorizar um novo sorteio agora."
+                    f"Digite a senha master para autorizar {acao_txt} agora."
                 )
 
                 with st.container(border=True):
                     senha_master_digitada = st.text_input(
-                        "Senha master para novo sorteio",
+                        "Senha master",
                         type="password",
-                        key="senha_master_sorteio_widget"
+                        key="senha_master_acao_widget"
                     )
 
                     c1, c2 = st.columns(2)
 
                     with c1:
-                        if st.button("Autorizar novo sorteio", use_container_width=True):
+                        if st.button("Autorizar ação", use_container_width=True):
                             if senha_master_digitada == SENHA_MASTER_SORTEIO:
-                                st.session_state.exigir_senha_master_sorteio = False
-                                st.session_state.erro_senha_master_sorteio = ""
-                                realizar_sorteio(mapa_abas)
+                                st.session_state.exigir_senha_master_acao = False
+                                st.session_state.erro_senha_master_acao = ""
+
+                                if st.session_state.tipo_acao_pendente == "sortear":
+                                    realizar_sorteio(mapa_abas)
+                                elif st.session_state.tipo_acao_pendente == "limpar":
+                                    realizar_limpeza_sorteio(mapa_abas)
                             else:
-                                st.session_state.erro_senha_master_sorteio = "Senha master inválida."
+                                st.session_state.erro_senha_master_acao = "Senha master inválida."
 
                     with c2:
                         if st.button("Cancelar autorização", use_container_width=True):
-                            st.session_state.exigir_senha_master_sorteio = False
-                            st.session_state.erro_senha_master_sorteio = ""
+                            st.session_state.exigir_senha_master_acao = False
+                            st.session_state.erro_senha_master_acao = ""
+                            st.session_state.tipo_acao_pendente = ""
                             st.rerun()
 
-                    if st.session_state.erro_senha_master_sorteio:
-                        st.error(st.session_state.erro_senha_master_sorteio)
+                    if st.session_state.erro_senha_master_acao:
+                        st.error(st.session_state.erro_senha_master_acao)
 
         else:
             st.warning("Sortear e limpar sorteio são ações restritas ao administrador.")
