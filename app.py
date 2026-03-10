@@ -709,8 +709,8 @@ def sortear_times(df_cadastro, df_presenca):
     for i in range(max_len):
         linhas_sorteio.append({
             "ORDEM": str(i + 1),
-            "TIME_1": time_1[i] if i < len(time_1) else "",
-            "TIME_2": time_2[i] if i < len(time_2) else "",
+            "TIME 1": time_1[i] if i < len(time_1) else "",
+            "TIME 2": time_2[i] if i < len(time_2) else "",
         })
 
     return pd.DataFrame(linhas_sorteio, columns=["ORDEM", "TIME_1", "TIME_2"])
