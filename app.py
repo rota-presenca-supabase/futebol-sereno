@@ -758,8 +758,8 @@ try:
             qtd_time_2 = (df_sorteio["TIME_2"].astype(str).str.strip() != "").sum()
 
             c1, c2 = st.columns(2)
-            c1.metric("Jogadores no TIME_1", int(qtd_time_1))
-            c2.metric("Jogadores no TIME_2", int(qtd_time_2))
+            c1.metric("Jogadores no Time 1", int(qtd_time_1))
+            c2.metric("Jogadores no Time 2", int(qtd_time_2))
 
 except SpreadsheetNotFound:
     st.error("Planilha 'FUTEBOL_SERENO' não encontrada ou não compartilhada com a service account.")
