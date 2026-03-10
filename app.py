@@ -25,12 +25,12 @@ ABA_CADASTRO = "CADASTRO_JOGADORES"
 ABA_PRESENCA = "LISTA_PRESENCA"
 ABA_SORTEIO = "LISTA_SORTEIO"
 
-COLUNAS_CADASTRO = ["NOME", "MENSALISTA", "DIARISTA", "CONVIDADO", "PEQUENO_JOGADOR", "POSICAO"]
+COLUNAS_CADASTRO = ["NOME", "MENSALISTA", "DIARISTA", "CONVIDADO", "CRIANÇA", "POSICAO"]
 COLUNAS_PRESENCA = ["NOME", "PRESENCA"]
 COLUNAS_SORTEIO = ["Ordem", "Time A", "Time B", "SORTEIO"]
 
 OPCOES_POSICAO = ["ZAGUEIRO", "MEIO CAMPO", "ATACANTE"]
-OPCOES_CATEGORIA = ["MENSALISTA", "DIARISTA", "CONVIDADO", "PEQUENO_JOGADOR"]
+OPCOES_CATEGORIA = ["MENSALISTA", "DIARISTA", "CONVIDADO", "CRIANÇA"]
 
 SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",
@@ -483,7 +483,7 @@ def montar_linha_cadastro(nome, categoria, posicao):
         "MENSALISTA": "SIM" if categoria == "MENSALISTA" else "NÃO",
         "DIARISTA": "SIM" if categoria == "DIARISTA" else "NÃO",
         "CONVIDADO": "SIM" if categoria == "CONVIDADO" else "NÃO",
-        "PEQUENO_JOGADOR": "SIM" if categoria == "PEQUENO_JOGADOR" else "NÃO",
+        "CRIANÇA": "SIM" if categoria == "CRIANÇA" else "NÃO",
         "POSICAO": posicao,
     }
 
@@ -494,8 +494,8 @@ def descobrir_categoria_jogador(linha):
         return "DIARISTA"
     if str(linha.get("CONVIDADO", "")).upper() == "SIM":
         return "CONVIDADO"
-    if str(linha.get("PEQUENO_JOGADOR", "")).upper() == "SIM":
-        return "PEQUENO_JOGADOR"
+    if str(linha.get("CRIANÇA", "")).upper() == "SIM":
+        return "CRIANÇA"
     return ""
 
 def obter_ultimo_timestamp_sorteio(mapa_abas):
@@ -649,7 +649,7 @@ def sortear_times(df_cadastro, df_presenca):
         "MENSALISTA": [],
         "DIARISTA": [],
         "CONVIDADO": [],
-        "PEQUENO_JOGADOR": []
+        "CRIANÇA": []
     }
 
     # Agrupa apenas por Categoria para o momento do sorteio (ignora a posição no sorteio)
@@ -662,7 +662,7 @@ def sortear_times(df_cadastro, df_presenca):
     for categoria in grupos:
         random.shuffle(grupos[categoria])
 
-    ordem_categorias = ["MENSALISTA", "DIARISTA", "CONVIDADO", "PEQUENO_JOGADOR"]
+    ordem_categorias = ["MENSALISTA", "DIARISTA", "CONVIDADO", "CRIANÇA"]
 
     time_1_objs = []
     time_2_objs = []
@@ -685,7 +685,7 @@ def sortear_times(df_cadastro, df_presenca):
         val_status = jogador.get("status", 2)
         
         # 2º Critério: Categoria (menor número vai pro topo dentro do seu bloco)
-        ordem_cat = {"MENSALISTA": 1, "DIARISTA": 2, "CONVIDADO": 3, "PEQUENO_JOGADOR": 4}
+        ordem_cat = {"MENSALISTA": 1, "DIARISTA": 2, "CONVIDADO": 3, "CRIANÇA": 4}
         
         # 3º Critério: Posição
         ordem_pos = {"ZAGUEIRO": 1, "MEIO CAMPO": 2, "ATACANTE": 3}
