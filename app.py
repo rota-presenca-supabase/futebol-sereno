@@ -719,7 +719,7 @@ try:
                     c1, c2 = st.columns(2)
 
                     with c1:
-                        if st.button("Autorizar ação", use_container_width=True):
+                        if st.button("Autorizar", use_container_width=True):
                             if senha_master_digitada == SENHA_MASTER_SORTEIO:
                                 st.session_state.exigir_senha_master_acao = False
                                 st.session_state.erro_senha_master_acao = ""
