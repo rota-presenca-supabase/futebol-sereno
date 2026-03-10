@@ -27,7 +27,7 @@ ABA_SORTEIO = "LISTA_SORTEIO"
 
 COLUNAS_CADASTRO = ["NOME", "MENSALISTA", "DIARISTA", "CONVIDADO", "PEQUENO_JOGADOR", "POSICAO"]
 COLUNAS_PRESENCA = ["NOME", "PRESENCA"]
-COLUNAS_SORTEIO = ["ORDEM", "Time A", "Time B", "SORTEIO"]
+COLUNAS_SORTEIO = ["Ordem", "Time A", "Time B", "SORTEIO"]
 
 OPCOES_POSICAO = ["ZAGUEIRO", "MEIO CAMPO", "ATACANTE"]
 OPCOES_CATEGORIA = ["MENSALISTA", "DIARISTA", "CONVIDADO", "PEQUENO_JOGADOR"]
@@ -484,7 +484,7 @@ def montar_linha_cadastro(nome, categoria, posicao):
         "DIARISTA": "SIM" if categoria == "DIARISTA" else "NÃO",
         "CONVIDADO": "SIM" if categoria == "CONVIDADO" else "NÃO",
         "PEQUENO_JOGADOR": "SIM" if categoria == "PEQUENO_JOGADOR" else "NÃO",
-        "POSIÇÃO": posicao,
+        "POSICAO": posicao,
     }
 
 def descobrir_categoria_jogador(linha):
@@ -708,19 +708,19 @@ def sortear_times(df_cadastro, df_presenca):
 
     for i in range(max_len):
         linhas_sorteio.append({
-            "ORDEM": str(i + 1),
+            "Ordem": str(i + 1),
             "Time A": time_1[i] if i < len(time_1) else "",
             "Time B": time_2[i] if i < len(time_2) else "",
         })
 
-    return pd.DataFrame(linhas_sorteio, columns=["ORDEM", "Time A", "Time B"])
+    return pd.DataFrame(linhas_sorteio, columns=["Ordem", "Time A", "Time B"])
 
 def anexar_timestamp_sorteio(df_sorteio, timestamp_str):
     df_sorteio = df_sorteio.copy()
 
     if df_sorteio.empty:
         return pd.DataFrame(
-            [{"ORDEM": "", "Time A": "", "Time B": "", "SORTEIO": timestamp_str}],
+            [{"Ordem": "", "Time A": "", "Time B": "", "SORTEIO": timestamp_str}],
             columns=COLUNAS_SORTEIO
         )
 
@@ -772,7 +772,7 @@ def realizar_limpeza_sorteio(mapa_abas):
 
     if timestamp_str:
         df_vazio = pd.DataFrame(
-            [{"ORDEM": "", "Time A": "", "Time B": "", "SORTEIO": timestamp_str}],
+            [{"Ordem": "", "Time A": "", "Time B": "", "SORTEIO": timestamp_str}],
             columns=COLUNAS_SORTEIO
         )
     else:
@@ -1190,14 +1190,14 @@ try:
             st.warning("Sortear e limpar sorteio são ações restritas ao administrador.")
 
         df_sorteio = ler_aba_com_cabecalho(mapa_abas, ABA_SORTEIO, COLUNAS_SORTEIO)
-        df_sorteio["ORDEM"] = df_sorteio["ORDEM"].astype(str).str.strip()
-        df_sorteio = df_sorteio[df_sorteio["ORDEM"] != ""].reset_index(drop=True)
+        df_sorteio["Ordem"] = df_sorteio["Ordem"].astype(str).str.strip()
+        df_sorteio = df_sorteio[df_sorteio["Ordem"] != ""].reset_index(drop=True)
 
         if df_sorteio.empty:
             st.info("Ainda não há sorteio realizado.")
         else:
             # st.markdown("### Resultado do sorteio")
-            exibir_tabela_html(df_sorteio[["ORDEM", "Time A", "Time B"]], centralizar_colunas=["ORDEM", "Time A", "Time B"])
+            exibir_tabela_html(df_sorteio[["Ordem", "Time A", "Time B"]], centralizar_colunas=["Ordem", "Time A", "Time B"])
 
     # ======================================================
     # LOGO NO FINAL DA PÁGINA
