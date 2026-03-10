@@ -222,7 +222,8 @@ def aplicar_estilo_global():
         div.element-container:has(#btn-confirmar-exclusao),
         div.element-container:has(#btn-cancelar-exclusao),
         div.element-container:has(#btn-autorizar-senha),
-        div.element-container:has(#btn-cancelar-senha) {
+        div.element-container:has(#btn-cancelar-senha),
+        div.element-container:has(#btn-whatsapp) {
             display: none !important;
         }
 
@@ -274,6 +275,18 @@ def aplicar_estilo_global():
         }
         div.element-container:has(#btn-cancelar-senha) + div.element-container button {
             background-color: #f3f4f6 !important; border-color: #e5e7eb !important; color: #1f2937 !important;
+        }
+
+        /* Cor Oficial do WhatsApp para o botão de link */
+        div.element-container:has(#btn-whatsapp) + div.element-container a {
+            background-color: #25D366 !important; 
+            border-color: #128C7E !important; 
+            color: #ffffff !important;
+            border-radius: 12px !important;
+        }
+        div.element-container:has(#btn-whatsapp) + div.element-container a p {
+            color: #ffffff !important;
+            font-weight: 800 !important;
         }
         </style>
         """,
@@ -1191,6 +1204,12 @@ try:
             limpar_cache_planilha()
             st.rerun()
 
+        # Lê os dados de sorteio atual para checar se a tabela está vazia
+        df_sorteio_leitura = ler_aba_com_cabecalho(mapa_abas, ABA_SORTEIO, COLUNAS_SORTEIO)
+        df_sorteio_leitura["Ordem"] = df_sorteio_leitura["Ordem"].astype(str).str.strip()
+        df_sorteio_valido = df_sorteio_leitura[df_sorteio_leitura["Ordem"] != ""].reset_index(drop=True)
+        tem_jogadores_sorteados = not df_sorteio_valido.empty
+
         if st.session_state.admin_autenticado:
             col1, col2 = st.columns(2)
 
@@ -1198,7 +1217,8 @@ try:
                 st.markdown('<div id="btn-sortear" style="display:none;"></div>', unsafe_allow_html=True)
                 if st.button("Sortear times", use_container_width=True):
                     restante = obter_segundos_restantes_bloqueio(mapa_abas)
-                    if restante <= 0:
+                    # Ignora a senha de bloqueio se não houver time montado
+                    if restante <= 0 or not tem_jogadores_sorteados:
                         realizar_sorteio(mapa_abas)
                     else:
                         st.session_state.exigir_senha_master_acao = True
@@ -1209,7 +1229,8 @@ try:
                 st.markdown('<div id="btn-limpar" style="display:none;"></div>', unsafe_allow_html=True)
                 if st.button("Limpar sorteio", use_container_width=True):
                     restante = obter_segundos_restantes_bloqueio(mapa_abas)
-                    if restante <= 0:
+                    # Ignora a senha de bloqueio se não houver time montado
+                    if restante <= 0 or not tem_jogadores_sorteados:
                         realizar_limpeza_sorteio(mapa_abas)
                     else:
                         st.session_state.exigir_senha_master_acao = True
@@ -1263,19 +1284,16 @@ try:
         else:
             st.warning("Sortear e Limpar Sorteio são ações para o Adm.!")
 
-        df_sorteio = ler_aba_com_cabecalho(mapa_abas, ABA_SORTEIO, COLUNAS_SORTEIO)
-        df_sorteio["Ordem"] = df_sorteio["Ordem"].astype(str).str.strip()
-        df_sorteio = df_sorteio[df_sorteio["Ordem"] != ""].reset_index(drop=True)
-
-        if df_sorteio.empty:
+        if not tem_jogadores_sorteados:
             st.info("Ainda não há sorteio realizado!")
         else:
             exibir_tabela_html(
-                df_sorteio[["Ordem", "Time A", "Time B"]],
+                df_sorteio_valido[["Ordem", "Time A", "Time B"]],
                 centralizar_colunas=["Ordem", "Time A", "Time B"]
             )
 
-            link_whatsapp = gerar_link_whatsapp_sorteio(df_sorteio)
+            link_whatsapp = gerar_link_whatsapp_sorteio(df_sorteio_leitura)
+            st.markdown('<div id="btn-whatsapp" style="display:none;"></div>', unsafe_allow_html=True)
             st.link_button("RESUMO PARA WHATSAPP", link_whatsapp, use_container_width=True)
             st.markdown(
                 "<div style='text-align:center; font-size:1rem; font-weight:600; color:#374151; margin-top:10px;'>App criado por: Teori@ / Sereno FC</div>",
