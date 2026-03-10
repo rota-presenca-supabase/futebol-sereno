@@ -1,6 +1,8 @@
 import random
 import time
 from pathlib import Path
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 import streamlit as st
 import gspread
@@ -25,7 +27,7 @@ ABA_SORTEIO = "LISTA_SORTEIO"
 
 COLUNAS_CADASTRO = ["NOME", "MENSALISTA", "DIARISTA", "CONVIDADO", "PEQUENO_JOGADOR", "POSICAO"]
 COLUNAS_PRESENCA = ["NOME", "PRESENCA"]
-COLUNAS_SORTEIO = ["ORDEM", "TIME_1", "TIME_2"]
+COLUNAS_SORTEIO = ["ORDEM", "TIME_1", "TIME_2", "SORTEIO"]
 
 OPCOES_POSICAO = ["ZAGUEIRO", "MEIO CAMPO", "ATACANTE"]
 OPCOES_CATEGORIA = ["MENSALISTA", "DIARISTA", "CONVIDADO", "PEQUENO_JOGADOR"]
@@ -34,6 +36,9 @@ SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/drive"
 ]
+
+FUSO_BR = ZoneInfo("America/Sao_Paulo")
+FORMATO_SORTEIO = "%Y-%m-%d %H:%M:%S"
 
 # ==========================================================
 # ACESSO ADMINISTRADOR
@@ -55,13 +60,13 @@ def aplicar_estilo_global():
         """
         <style>
         .block-container {
-            padding-top: 1.2rem;
+            padding-top: 1.0rem;
             padding-bottom: 2rem;
         }
 
         .sereno-topo {
-            background: linear-gradient(135deg, #fff8f2 0%, #fff 45%, #fff7ef 100%);
-            border: 1px solid #f0e1d1;
+            background: linear-gradient(135deg, #fff8f2 0%, #ffffff 50%, #fff5eb 100%);
+            border: 1px solid #f0dfd0;
             border-radius: 22px;
             padding: 18px 22px;
             margin-bottom: 16px;
@@ -69,11 +74,11 @@ def aplicar_estilo_global():
         }
 
         .sereno-titulo {
-            font-size: 2.3rem;
+            font-size: 2.35rem;
             font-weight: 800;
-            color: #171717;
+            color: #111827;
             margin: 0;
-            line-height: 1.1;
+            line-height: 1.05;
         }
 
         .sereno-subtitulo {
@@ -94,10 +99,10 @@ def aplicar_estilo_global():
 
         .sereno-card-presenca {
             background: linear-gradient(180deg, #fffaf5 0%, #ffffff 100%);
-            border: 2px solid #f6b26b;
+            border: 2px solid #f59e0b;
             border-radius: 18px;
-            padding: 16px 18px 8px 18px;
-            box-shadow: 0 6px 18px rgba(245, 158, 11, 0.10);
+            padding: 16px 18px 10px 18px;
+            box-shadow: 0 8px 18px rgba(245, 158, 11, 0.10);
             margin-bottom: 14px;
         }
 
@@ -147,14 +152,6 @@ def aplicar_estilo_global():
             text-align: center !important;
         }
 
-        .sereno-presenca-box {
-            background: #fff;
-            border: 1px solid #f0e1d1;
-            border-radius: 16px;
-            padding: 8px 14px 2px 14px;
-            margin-top: 8px;
-        }
-
         .sereno-secao-titulo {
             font-size: 1.12rem;
             font-weight: 700;
@@ -166,7 +163,7 @@ def aplicar_estilo_global():
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 160px;
+            min-height: 120px;
         }
 
         div[data-testid="stMetric"] {
@@ -202,6 +199,26 @@ def aplicar_estilo_global():
             height: 44px;
             border-radius: 12px 12px 0 0;
             font-weight: 700;
+        }
+
+        div[data-testid="stCheckbox"] {
+            padding: 8px 12px;
+            border-radius: 12px;
+            border: 1px solid #efefef;
+            margin-bottom: 6px;
+            background: #ffffff;
+        }
+
+        div[data-testid="stCheckbox"]:nth-of-type(odd) {
+            background: #fff8f1;
+        }
+
+        div[data-testid="stCheckbox"]:nth-of-type(even) {
+            background: #ffffff;
+        }
+
+        div[data-testid="stCheckbox"] label p {
+            font-weight: 700 !important;
         }
         </style>
         """,
@@ -268,6 +285,24 @@ def executar_com_retry(func, *args, **kwargs):
             raise
 
 # ==========================================================
+# FUNÇÕES DE TEMPO / SORTEIO GLOBAL
+# ==========================================================
+def agora_br():
+    return datetime.now(FUSO_BR)
+
+def formatar_timestamp_sorteio(dt):
+    return dt.strftime(FORMATO_SORTEIO)
+
+def parse_timestamp_sorteio(texto):
+    texto = str(texto).strip()
+    if not texto:
+        return None
+    try:
+        return datetime.strptime(texto, FORMATO_SORTEIO).replace(tzinfo=FUSO_BR)
+    except Exception:
+        return None
+
+# ==========================================================
 # CONEXÃO
 # ==========================================================
 @st.cache_resource
@@ -298,6 +333,10 @@ def limpar_cache_planilha():
 @st.cache_data(ttl=15)
 def ler_valores_aba_cacheado(nome_aba):
     _, mapa_abas = conectar_gsheet()
+    ws = obter_worksheet(mapa_abas, nome_aba)
+    return executar_com_retry(ws.get_all_values)
+
+def ler_valores_aba_tempo_real(mapa_abas, nome_aba):
     ws = obter_worksheet(mapa_abas, nome_aba)
     return executar_com_retry(ws.get_all_values)
 
@@ -425,6 +464,35 @@ def descobrir_categoria_jogador(linha):
         return "PEQUENO_JOGADOR"
     return ""
 
+def obter_ultimo_timestamp_sorteio(mapa_abas):
+    valores = ler_valores_aba_tempo_real(mapa_abas, ABA_SORTEIO)
+    if not valores:
+        return None
+
+    cabecalho = valores[0]
+    if "SORTEIO" not in cabecalho:
+        return None
+
+    idx = cabecalho.index("SORTEIO")
+    ultimo_dt = None
+
+    for linha in valores[1:]:
+        valor = linha[idx] if idx < len(linha) else ""
+        dt = parse_timestamp_sorteio(valor)
+        if dt and (ultimo_dt is None or dt > ultimo_dt):
+            ultimo_dt = dt
+
+    return ultimo_dt
+
+def obter_segundos_restantes_bloqueio(mapa_abas):
+    ultimo_dt = obter_ultimo_timestamp_sorteio(mapa_abas)
+    if ultimo_dt is None:
+        return 0
+
+    diferenca = (agora_br() - ultimo_dt).total_seconds()
+    restante = TEMPO_BLOQUEIO_SORTEIO_SEGUNDOS - int(diferenca)
+    return max(0, restante)
+
 def montar_df_presenca_sincronizado(mapa_abas):
     df_cadastro = ler_aba_com_cabecalho(mapa_abas, ABA_CADASTRO, COLUNAS_CADASTRO)
     df_presenca = ler_aba_com_cabecalho(mapa_abas, ABA_PRESENCA, COLUNAS_PRESENCA)
@@ -511,6 +579,22 @@ def formatar_tempo_restante(segundos):
     segundos_restantes = int(segundos % 60)
     return f"{minutos:02d}:{segundos_restantes:02d}"
 
+def distribuir_bloco_em_dupla(nomes_embaralhados, qtd_total_time1, qtd_total_time2):
+    bloco_time1 = []
+    bloco_time2 = []
+
+    proximo_time = 1 if qtd_total_time1 <= qtd_total_time2 else 2
+
+    for nome in nomes_embaralhados:
+        if proximo_time == 1:
+            bloco_time1.append(nome)
+            proximo_time = 2
+        else:
+            bloco_time2.append(nome)
+            proximo_time = 1
+
+    return bloco_time1, bloco_time2
+
 def sortear_times(df_cadastro, df_presenca):
     cadastro_map = {}
     for _, row in df_cadastro.iterrows():
@@ -549,47 +633,53 @@ def sortear_times(df_cadastro, df_presenca):
         for posicao in grupos[categoria]:
             random.shuffle(grupos[categoria][posicao])
 
-    time_1 = []
-    time_2 = []
-    proximo_time = 1
-
-    def adicionar_jogador(nome_jogador):
-        nonlocal proximo_time, time_1, time_2
-
-        if len(time_1) < len(time_2):
-            time_1.append(nome_jogador)
-            proximo_time = 2
-        elif len(time_2) < len(time_1):
-            time_2.append(nome_jogador)
-            proximo_time = 1
-        else:
-            if proximo_time == 1:
-                time_1.append(nome_jogador)
-                proximo_time = 2
-            else:
-                time_2.append(nome_jogador)
-                proximo_time = 1
-
     ordem_categorias = ["MENSALISTA", "DIARISTA", "CONVIDADO", "PEQUENO_JOGADOR"]
     ordem_posicoes = ["ZAGUEIRO", "MEIO CAMPO", "ATACANTE"]
 
+    linhas_sorteio = []
+    total_time1 = 0
+    total_time2 = 0
+    ordem = 1
+
     for categoria in ordem_categorias:
         for posicao in ordem_posicoes:
-            for nome_jogador in grupos[categoria][posicao]:
-                adicionar_jogador(nome_jogador)
+            nomes_grupo = grupos[categoria][posicao]
+            if not nomes_grupo:
+                continue
 
-    max_len = max(len(time_1), len(time_2), 0)
-    linhas_sorteio = []
+            bloco_time1, bloco_time2 = distribuir_bloco_em_dupla(
+                nomes_grupo,
+                total_time1,
+                total_time2
+            )
 
-    for i in range(max_len):
-        linhas_sorteio.append({
-            "ORDEM": str(i + 1),
-            "TIME_1": time_1[i] if i < len(time_1) else "",
-            "TIME_2": time_2[i] if i < len(time_2) else "",
-        })
+            max_len_bloco = max(len(bloco_time1), len(bloco_time2))
+            for i in range(max_len_bloco):
+                linhas_sorteio.append({
+                    "ORDEM": str(ordem),
+                    "TIME_1": bloco_time1[i] if i < len(bloco_time1) else "",
+                    "TIME_2": bloco_time2[i] if i < len(bloco_time2) else "",
+                })
+                ordem += 1
 
-    df_sorteio = pd.DataFrame(linhas_sorteio, columns=COLUNAS_SORTEIO)
+            total_time1 += len(bloco_time1)
+            total_time2 += len(bloco_time2)
+
+    df_sorteio = pd.DataFrame(linhas_sorteio, columns=["ORDEM", "TIME_1", "TIME_2"])
     return df_sorteio
+
+def anexar_timestamp_sorteio(df_sorteio, timestamp_str):
+    df_sorteio = df_sorteio.copy()
+
+    if df_sorteio.empty:
+        return pd.DataFrame(
+            [{"ORDEM": "", "TIME_1": "", "TIME_2": "", "SORTEIO": timestamp_str}],
+            columns=COLUNAS_SORTEIO
+        )
+
+    df_sorteio["SORTEIO"] = ""
+    df_sorteio.at[0, "SORTEIO"] = timestamp_str
+    return df_sorteio[COLUNAS_SORTEIO]
 
 def realizar_sorteio(mapa_abas):
     df_cadastro = ler_aba_com_cabecalho(mapa_abas, ABA_CADASTRO, COLUNAS_CADASTRO)
@@ -618,9 +708,10 @@ def realizar_sorteio(mapa_abas):
         return
 
     df_sorteio = sortear_times(df_cadastro, df_presenca)
+    timestamp_atual = formatar_timestamp_sorteio(agora_br())
+    df_sorteio = anexar_timestamp_sorteio(df_sorteio, timestamp_atual)
     escrever_dataframe_na_aba(mapa_abas, ABA_SORTEIO, df_sorteio, COLUNAS_SORTEIO)
 
-    st.session_state.ultimo_sorteio_ts = time.time()
     st.session_state.exigir_senha_master_acao = False
     st.session_state.erro_senha_master_acao = ""
     st.session_state.tipo_acao_pendente = ""
@@ -629,7 +720,17 @@ def realizar_sorteio(mapa_abas):
     st.rerun()
 
 def realizar_limpeza_sorteio(mapa_abas):
-    df_vazio = pd.DataFrame(columns=COLUNAS_SORTEIO)
+    ultimo_dt = obter_ultimo_timestamp_sorteio(mapa_abas)
+    timestamp_str = formatar_timestamp_sorteio(ultimo_dt) if ultimo_dt else ""
+
+    if timestamp_str:
+        df_vazio = pd.DataFrame(
+            [{"ORDEM": "", "TIME_1": "", "TIME_2": "", "SORTEIO": timestamp_str}],
+            columns=COLUNAS_SORTEIO
+        )
+    else:
+        df_vazio = pd.DataFrame(columns=COLUNAS_SORTEIO)
+
     escrever_dataframe_na_aba(mapa_abas, ABA_SORTEIO, df_vazio, COLUNAS_SORTEIO)
 
     st.session_state.exigir_senha_master_acao = False
@@ -650,9 +751,6 @@ if "admin_autenticado" not in st.session_state:
 
 if "admin_erro_login" not in st.session_state:
     st.session_state.admin_erro_login = ""
-
-if "ultimo_sorteio_ts" not in st.session_state:
-    st.session_state.ultimo_sorteio_ts = None
 
 if "exigir_senha_master_acao" not in st.session_state:
     st.session_state.exigir_senha_master_acao = False
@@ -709,12 +807,12 @@ with st.sidebar:
 # ==========================================================
 logo_path = Path("SERENO FC.png")
 
-col_logo, col_titulo = st.columns([1, 3])
+col_logo, col_titulo = st.columns([0.65, 3.35])
 
 with col_logo:
     st.markdown("<div class='sereno-logo-box'>", unsafe_allow_html=True)
     if logo_path.exists():
-        st.image(str(logo_path), use_container_width=True)
+        st.image(str(logo_path), width=140)
     st.markdown("</div>", unsafe_allow_html=True)
 
 with col_titulo:
@@ -747,6 +845,9 @@ try:
 
     abas = st.tabs(["CADASTRO DE JOGADORES", "LISTA DE PRESENCA", "SORTEIO DOS TIMES"])
 
+    # ======================================================
+    # ABA 1 - CADASTRO
+    # ======================================================
     with abas[0]:
         df_cadastro = ler_aba_com_cabecalho(mapa_abas, ABA_CADASTRO, COLUNAS_CADASTRO)
         df_cadastro["NOME"] = df_cadastro["NOME"].astype(str).str.strip()
@@ -900,6 +1001,9 @@ try:
                                 st.session_state.pendente_excluir_jogador = ""
                                 st.rerun()
 
+    # ======================================================
+    # ABA 2 - PRESENÇA
+    # ======================================================
     with abas[1]:
         df_presenca = sincronizar_lista_presenca(mapa_abas, forcar_gravacao=False)
         df_presenca["NOME"] = df_presenca["NOME"].astype(str).str.strip()
@@ -951,11 +1055,11 @@ try:
             else:
                 st.markdown("<div class='sereno-card-presenca'>", unsafe_allow_html=True)
                 st.markdown("<div class='sereno-secao-titulo'>Marcação de presença</div>", unsafe_allow_html=True)
-                st.markdown("<div class='sereno-presenca-box'>", unsafe_allow_html=True)
+
                 for _, row in df_presenca.iterrows():
                     nome = normalizar_nome(row["NOME"])
-                    st.checkbox(nome, key=chave_checkbox_presenca(nome))
-                st.markdown("</div>", unsafe_allow_html=True)
+                    st.checkbox(f"**{nome}**", key=chave_checkbox_presenca(nome))
+
                 st.markdown("</div>", unsafe_allow_html=True)
         else:
             st.warning("Alterações de presença restritas ao administrador.")
@@ -966,16 +1070,17 @@ try:
         else:
             exibir_tabela_html(df_presenca, centralizar_colunas=["PRESENCA"])
 
+    # ======================================================
+    # ABA 3 - SORTEIO
+    # ======================================================
     with abas[2]:
         if st.session_state.admin_autenticado:
             col1, col2 = st.columns(2)
 
             with col1:
                 if st.button("Sortear times", use_container_width=True):
-                    agora = time.time()
-                    ultimo_sorteio_ts = st.session_state.ultimo_sorteio_ts
-
-                    if ultimo_sorteio_ts is None or (agora - ultimo_sorteio_ts) >= TEMPO_BLOQUEIO_SORTEIO_SEGUNDOS:
+                    restante = obter_segundos_restantes_bloqueio(mapa_abas)
+                    if restante <= 0:
                         realizar_sorteio(mapa_abas)
                     else:
                         st.session_state.exigir_senha_master_acao = True
@@ -984,10 +1089,8 @@ try:
 
             with col2:
                 if st.button("Limpar sorteio", use_container_width=True):
-                    agora = time.time()
-                    ultimo_sorteio_ts = st.session_state.ultimo_sorteio_ts
-
-                    if ultimo_sorteio_ts is None or (agora - ultimo_sorteio_ts) >= TEMPO_BLOQUEIO_SORTEIO_SEGUNDOS:
+                    restante = obter_segundos_restantes_bloqueio(mapa_abas)
+                    if restante <= 0:
                         realizar_limpeza_sorteio(mapa_abas)
                     else:
                         st.session_state.exigir_senha_master_acao = True
@@ -995,10 +1098,7 @@ try:
                         st.session_state.tipo_acao_pendente = "limpar"
 
             if st.session_state.exigir_senha_master_acao:
-                agora = time.time()
-                ultimo_sorteio_ts = st.session_state.ultimo_sorteio_ts or 0
-                restante = max(0, TEMPO_BLOQUEIO_SORTEIO_SEGUNDOS - (agora - ultimo_sorteio_ts))
-
+                restante = obter_segundos_restantes_bloqueio(mapa_abas)
                 acao_txt = "novo sorteio" if st.session_state.tipo_acao_pendente == "sortear" else "limpar sorteio"
 
                 st.warning(
@@ -1050,7 +1150,7 @@ try:
             st.info("Ainda não há sorteio realizado.")
         else:
             st.markdown("### Resultado do sorteio")
-            exibir_tabela_html(df_sorteio, centralizar_colunas=["ORDEM"])
+            exibir_tabela_html(df_sorteio[["ORDEM", "TIME_1", "TIME_2"]], centralizar_colunas=["ORDEM"])
 
             qtd_time_1 = (df_sorteio["TIME_1"].astype(str).str.strip() != "").sum()
             qtd_time_2 = (df_sorteio["TIME_2"].astype(str).str.strip() != "").sum()
