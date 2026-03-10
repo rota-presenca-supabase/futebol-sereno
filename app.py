@@ -17,9 +17,9 @@ st.set_page_config(page_title="FUTEBOL_SERENO", layout="wide")
 INFO_CREDENCIAIS = dict(st.secrets["gcp_service_account"])
 NOME_PLANILHA = "FUTEBOL_SERENO"
 
-ABA_CADASTRO = "CADASTRO DE JOGADORES"
-ABA_PRESENCA = "LISTA DE PRESENCA"
-ABA_SORTEIO = "SORTEIO DOS TIMES"
+ABA_CADASTRO = "CADASTRO_JOGADORES"
+ABA_PRESENCA = "LISTA_PRESENCA"
+ABA_SORTEIO = "LISTA_SORTEIO"
 
 COLUNAS_CADASTRO = ["NOME", "MENSALISTA", "DIARISTA", "CONVIDADO", "PEQUENO_JOGADOR"]
 COLUNAS_PRESENCA = ["NOME", "PRESENCA"]
@@ -311,7 +311,7 @@ with st.sidebar:
         with st.form("form_login_admin"):
             usuario_admin = st.text_input("Usuário")
             senha_admin = st.text_input("Senha", type="password")
-            entrar_admin = st.form_submit_button("Entrar")
+            entrar_admin = st.form_submit_button("Entrar como administrador")
 
         if entrar_admin:
             if usuario_admin == ADMIN_USUARIO and senha_admin == ADMIN_SENHA:
@@ -351,7 +351,7 @@ try:
     else:
         st.info("Modo visualização ativo. Faça login na barra lateral para alterar dados.")
 
-    abas = st.tabs(["CADASTRO DE JOGADORES", "LISTA DE PRESENCA", "SORTEIO DOS TIMES"])
+    abas = st.tabs(["CADASTRO_JOGADORES", "LISTA_PRESENCA", "LISTA_SORTEIO"])
 
     with abas[0]:
         st.subheader("Cadastro de jogadores")
@@ -483,7 +483,7 @@ try:
                     st.rerun()
 
             if df_presenca.empty:
-                st.info("Nenhum jogador disponível na lista de presença. Cadastre jogadores na aba CADASTRO DOS JOGADORES.")
+                st.info("Nenhum jogador disponível na lista de presença. Cadastre jogadores na aba CADASTRO_JOGADORES.")
             else:
                 with st.form("form_presenca"):
                     novos_valores = []
