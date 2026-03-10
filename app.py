@@ -27,7 +27,7 @@ ABA_SORTEIO = "LISTA_SORTEIO"
 
 COLUNAS_CADASTRO = ["NOME", "MENSALISTA", "DIARISTA", "CONVIDADO", "PEQUENO_JOGADOR", "POSICAO"]
 COLUNAS_PRESENCA = ["NOME", "PRESENCA"]
-COLUNAS_SORTEIO = ["ORDEM", "TIME_1", "TIME_2", "SORTEIO"]
+COLUNAS_SORTEIO = ["ORDEM", "Time A", "Time B", "SORTEIO"]
 
 OPCOES_POSICAO = ["ZAGUEIRO", "MEIO CAMPO", "ATACANTE"]
 OPCOES_CATEGORIA = ["MENSALISTA", "DIARISTA", "CONVIDADO", "PEQUENO_JOGADOR"]
@@ -195,7 +195,7 @@ def aplicar_estilo_global():
         /* Mirando diretamente no texto da guia para forçar tamanho */
         button[data-baseweb="tab"] p,
         div[data-testid="stTabs"] button p {
-            font-size: 1.00rem !important; /* Mantém o tamanho levemente maior */
+            font-size: 1.15rem !important; /* Mantém o tamanho levemente maior */
         }
 
         div[data-testid="stCheckbox"] {
@@ -709,18 +709,18 @@ def sortear_times(df_cadastro, df_presenca):
     for i in range(max_len):
         linhas_sorteio.append({
             "ORDEM": str(i + 1),
-            "TIME_1": time_1[i] if i < len(time_1) else "",
-            "TIME_2": time_2[i] if i < len(time_2) else "",
+            "Time A": time_1[i] if i < len(time_1) else "",
+            "Time B": time_2[i] if i < len(time_2) else "",
         })
 
-    return pd.DataFrame(linhas_sorteio, columns=["ORDEM", "TIME_1", "TIME_2"])
+    return pd.DataFrame(linhas_sorteio, columns=["ORDEM", "Time A", "Time B"])
 
 def anexar_timestamp_sorteio(df_sorteio, timestamp_str):
     df_sorteio = df_sorteio.copy()
 
     if df_sorteio.empty:
         return pd.DataFrame(
-            [{"ORDEM": "", "TIME_1": "", "TIME_2": "", "SORTEIO": timestamp_str}],
+            [{"ORDEM": "", "Time A": "", "Time B": "", "SORTEIO": timestamp_str}],
             columns=COLUNAS_SORTEIO
         )
 
@@ -772,7 +772,7 @@ def realizar_limpeza_sorteio(mapa_abas):
 
     if timestamp_str:
         df_vazio = pd.DataFrame(
-            [{"ORDEM": "", "TIME_1": "", "TIME_2": "", "SORTEIO": timestamp_str}],
+            [{"ORDEM": "", "Time A": "", "Time B": "", "SORTEIO": timestamp_str}],
             columns=COLUNAS_SORTEIO
         )
     else:
@@ -1197,7 +1197,7 @@ try:
             st.info("Ainda não há sorteio realizado.")
         else:
             st.markdown("### Resultado do sorteio")
-            exibir_tabela_html(df_sorteio[["ORDEM", "TIME_1", "TIME_2"]], centralizar_colunas=["ORDEM", "TIME_1", "TIME_2"])
+            exibir_tabela_html(df_sorteio[["ORDEM", "Time A", "Time B"]], centralizar_colunas=["ORDEM", "Time A", "Time B"])
 
     # ======================================================
     # LOGO NO FINAL DA PÁGINA
