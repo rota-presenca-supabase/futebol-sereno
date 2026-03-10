@@ -910,8 +910,8 @@ try:
     abas = st.tabs([
         "CADASTRO",
         "JOGADORES",
-        "PRESENCA",
-        "SORTEIO"
+        "PRESENÇA",
+        "SORTEIO DOS TIMES"
     ])
 
     # ======================================================
