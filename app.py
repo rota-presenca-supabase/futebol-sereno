@@ -484,7 +484,7 @@ def montar_linha_cadastro(nome, categoria, posicao):
         "DIARISTA": "SIM" if categoria == "DIARISTA" else "NÃO",
         "CONVIDADO": "SIM" if categoria == "CONVIDADO" else "NÃO",
         "PEQUENO_JOGADOR": "SIM" if categoria == "PEQUENO_JOGADOR" else "NÃO",
-        "POSICAO": posicao,
+        "POSIÇÃO": posicao,
     }
 
 def descobrir_categoria_jogador(linha):
