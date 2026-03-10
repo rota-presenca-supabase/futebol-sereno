@@ -195,7 +195,7 @@ def aplicar_estilo_global():
         /* Mirando diretamente no texto da guia para forçar tamanho */
         button[data-baseweb="tab"] p,
         div[data-testid="stTabs"] button p {
-            font-size: 1.05rem !important; /* Mantém o tamanho levemente maior */
+            font-size: 1.15rem !important; /* Mantém o tamanho levemente maior */
         }
 
         div[data-testid="stCheckbox"] {
@@ -641,38 +641,36 @@ def sortear_times(df_cadastro, df_presenca):
         if nome and presenca == "SIM" and nome in cadastro_map:
             presentes.append({
                 "nome": nome,
-                "categoria": cadastro_map[nome]["categoria"],
-                "posicao": cadastro_map[nome]["posicao"]
+                "categoria": cadastro_map[nome]["categoria"]
             })
 
     grupos = {
-        "MENSALISTA": {"ZAGUEIRO": [], "MEIO CAMPO": [], "ATACANTE": []},
-        "DIARISTA": {"ZAGUEIRO": [], "MEIO CAMPO": [], "ATACANTE": []},
-        "CONVIDADO": {"ZAGUEIRO": [], "MEIO CAMPO": [], "ATACANTE": []},
-        "PEQUENO_JOGADOR": {"ZAGUEIRO": [], "MEIO CAMPO": [], "ATACANTE": []},
+        "MENSALISTA": [],
+        "DIARISTA": [],
+        "CONVIDADO": [],
+        "PEQUENO_JOGADOR": []
     }
 
+    # Agrupa apenas por Categoria (ignora a posição)
     for jogador in presentes:
         categoria = jogador["categoria"]
-        posicao = jogador["posicao"]
-        if categoria in grupos and posicao in grupos[categoria]:
-            grupos[categoria][posicao].append(jogador["nome"])
+        if categoria in grupos:
+            grupos[categoria].append(jogador["nome"])
 
+    # Embaralha os jogadores dentro de cada categoria
     for categoria in grupos:
-        for posicao in grupos[categoria]:
-            random.shuffle(grupos[categoria][posicao])
+        random.shuffle(grupos[categoria])
 
     ordem_categorias = ["MENSALISTA", "DIARISTA", "CONVIDADO", "PEQUENO_JOGADOR"]
-    ordem_posicoes = ["ZAGUEIRO", "MEIO CAMPO", "ATACANTE"]
 
     time_1 = []
     time_2 = []
 
+    # Distribui alternadamente
     for categoria in ordem_categorias:
-        for posicao in ordem_posicoes:
-            nomes_grupo = grupos[categoria][posicao]
-            if nomes_grupo:
-                distribuir_grupo_para_listas(nomes_grupo, time_1, time_2)
+        nomes_grupo = grupos[categoria]
+        if nomes_grupo:
+            distribuir_grupo_para_listas(nomes_grupo, time_1, time_2)
 
     time_1 = [nome for nome in time_1 if str(nome).strip()]
     time_2 = [nome for nome in time_2 if str(nome).strip()]
