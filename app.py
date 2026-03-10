@@ -732,7 +732,7 @@ try:
                                 st.session_state.erro_senha_master_acao = "Senha master inválida."
 
                     with c2:
-                        if st.button("Cancelar autorização", use_container_width=True):
+                        if st.button("Cancelar", use_container_width=True):
                             st.session_state.exigir_senha_master_acao = False
                             st.session_state.erro_senha_master_acao = ""
                             st.session_state.tipo_acao_pendente = ""
