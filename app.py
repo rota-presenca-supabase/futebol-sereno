@@ -1232,7 +1232,7 @@ try:
             )
 
             link_whatsapp = gerar_link_whatsapp_sorteio(df_sorteio)
-            st.link_button("Abrir resumo no WhatsApp", link_whatsapp, use_container_width=True)
+            st.link_button("RESUMO PARA WHATSAPP", link_whatsapp, use_container_width=True)
 
     # ======================================================
     # LOGO NO FINAL DA PÁGINA
