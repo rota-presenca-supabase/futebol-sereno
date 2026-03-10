@@ -1247,7 +1247,7 @@ try:
                         st.error(st.session_state.erro_senha_master_acao)
 
         else:
-            st.warning("Sortear e Limpar sorteio são ações para o Adm.!")
+            st.warning("Sortear e Limpar Sorteio são ações para o Adm.!")
 
         df_sorteio = ler_aba_com_cabecalho(mapa_abas, ABA_SORTEIO, COLUNAS_SORTEIO)
         df_sorteio["Ordem"] = df_sorteio["Ordem"].astype(str).str.strip()
