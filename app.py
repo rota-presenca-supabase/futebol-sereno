@@ -75,7 +75,7 @@ def aplicar_estilo_global():
         }
 
         .sereno-titulo {
-            font-size: 2.35rem;
+            font-size: 3.30rem; /* Aumentado 40% */
             font-weight: 800;
             color: #111827;
             margin: 0;
@@ -109,7 +109,7 @@ def aplicar_estilo_global():
         table.sereno-table thead th {
             background: #111827;
             color: #ffffff;
-            text-align: left;
+            text-align: center; /* Cabeçalho centralizado */
             padding: 12px 14px;
             font-weight: 700;
             border-bottom: 1px solid #111827;
@@ -191,6 +191,7 @@ def aplicar_estilo_global():
             height: 44px;
             border-radius: 12px 12px 0 0;
             font-weight: 700;
+            font-size: 1.15rem; /* Aumentado 15% */
         }
 
         div[data-testid="stCheckbox"] {
@@ -212,6 +213,38 @@ def aplicar_estilo_global():
         div[data-testid="stCheckbox"] label p {
             font-weight: 700 !important;
             font-size: 1.2rem !important;
+        }
+
+        /* Oculta os ancoradores CSS que usamos para colorir os botões cirurgicamente */
+        div.element-container:has(#btn-salvar-presenca),
+        div.element-container:has(#btn-marcar-sim),
+        div.element-container:has(#btn-marcar-nao),
+        div.element-container:has(#btn-atualizar-dados),
+        div.element-container:has(#btn-sortear),
+        div.element-container:has(#btn-limpar) {
+            display: none !important;
+        }
+
+        /* Cores Cirúrgicas para aba Presença */
+        div.element-container:has(#btn-salvar-presenca) + div.element-container div.stButton > button {
+            background-color: #d1fae5 !important; border-color: #a7f3d0 !important; color: #065f46 !important;
+        }
+        div.element-container:has(#btn-marcar-sim) + div.element-container div.stButton > button {
+            background-color: #dbeafe !important; border-color: #bfdbfe !important; color: #1e40af !important;
+        }
+        div.element-container:has(#btn-marcar-nao) + div.element-container div.stButton > button {
+            background-color: #fee2e2 !important; border-color: #fecaca !important; color: #991b1b !important;
+        }
+
+        /* Cores Cirúrgicas para aba Sorteio */
+        div.element-container:has(#btn-atualizar-dados) + div.element-container div.stButton > button {
+            background-color: #f3f4f6 !important; border-color: #e5e7eb !important; color: #1f2937 !important;
+        }
+        div.element-container:has(#btn-sortear) + div.element-container div.stButton > button {
+            background-color: #fef08a !important; border-color: #fde047 !important; color: #854d0e !important;
+        }
+        div.element-container:has(#btn-limpar) + div.element-container div.stButton > button {
+            background-color: #ffedd5 !important; border-color: #fed7aa !important; color: #9a3412 !important;
         }
         </style>
         """,
@@ -991,6 +1024,7 @@ try:
             col1, col2, col3 = st.columns(3)
 
             with col1:
+                st.markdown('<div id="btn-salvar-presenca" style="display:none;"></div>', unsafe_allow_html=True)
                 if st.button("Salvar presença", use_container_width=True):
                     novo_df_presenca = construir_df_presenca_a_partir_dos_checkboxes(df_presenca)
                     escrever_dataframe_na_aba(mapa_abas, ABA_PRESENCA, novo_df_presenca, COLUNAS_PRESENCA)
@@ -1000,6 +1034,7 @@ try:
                     st.rerun()
 
             with col2:
+                st.markdown('<div id="btn-marcar-sim" style="display:none;"></div>', unsafe_allow_html=True)
                 if st.button("Marcar todos como SIM", use_container_width=True):
                     if not df_presenca.empty:
                         df_presenca["PRESENCA"] = "SIM"
@@ -1010,6 +1045,7 @@ try:
                     st.rerun()
 
             with col3:
+                st.markdown('<div id="btn-marcar-nao" style="display:none;"></div>', unsafe_allow_html=True)
                 if st.button("Marcar todos como NÃO", use_container_width=True):
                     if not df_presenca.empty:
                         df_presenca["PRESENCA"] = "NÃO"
@@ -1037,10 +1073,16 @@ try:
     # ABA 4 - SORTEIO
     # ======================================================
     with abas[3]:
+        st.markdown('<div id="btn-atualizar-dados" style="display:none;"></div>', unsafe_allow_html=True)
+        if st.button("🔄 Atualizar Dados", use_container_width=True):
+            limpar_cache_planilha()
+            st.rerun()
+            
         if st.session_state.admin_autenticado:
             col1, col2 = st.columns(2)
 
             with col1:
+                st.markdown('<div id="btn-sortear" style="display:none;"></div>', unsafe_allow_html=True)
                 if st.button("Sortear times", use_container_width=True):
                     restante = obter_segundos_restantes_bloqueio(mapa_abas)
                     if restante <= 0:
@@ -1051,6 +1093,7 @@ try:
                         st.session_state.tipo_acao_pendente = "sortear"
 
             with col2:
+                st.markdown('<div id="btn-limpar" style="display:none;"></div>', unsafe_allow_html=True)
                 if st.button("Limpar sorteio", use_container_width=True):
                     restante = obter_segundos_restantes_bloqueio(mapa_abas)
                     if restante <= 0:
@@ -1113,7 +1156,7 @@ try:
             st.info("Ainda não há sorteio realizado.")
         else:
             st.markdown("### Resultado do sorteio")
-            exibir_tabela_html(df_sorteio[["ORDEM", "TIME_1", "TIME_2"]], centralizar_colunas=["ORDEM"])
+            exibir_tabela_html(df_sorteio[["ORDEM", "TIME_1", "TIME_2"]], centralizar_colunas=["ORDEM", "TIME_1", "TIME_2"])
 
     # ======================================================
     # LOGO NO FINAL DA PÁGINA
