@@ -713,14 +713,14 @@ def sortear_times(df_cadastro, df_presenca):
             "TIME_2": time_2[i] if i < len(time_2) else "",
         })
 
-    return pd.DataFrame(linhas_sorteio, columns=["ORDEM", "TIME 1", "TIME 2"])
+    return pd.DataFrame(linhas_sorteio, columns=["ORDEM", "TIME_1", "TIME_2"])
 
 def anexar_timestamp_sorteio(df_sorteio, timestamp_str):
     df_sorteio = df_sorteio.copy()
 
     if df_sorteio.empty:
         return pd.DataFrame(
-            [{"ORDEM": "", "TIME_1": "", "TIME_2": "", "SORTEIO": timestamp_str}],
+            [{"ORDEM": "", "TIME 1": "", "TIME 2": "", "SORTEIO": timestamp_str}],
             columns=COLUNAS_SORTEIO
         )
 
