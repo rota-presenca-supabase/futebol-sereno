@@ -311,7 +311,7 @@ with st.sidebar:
         with st.form("form_login_admin"):
             usuario_admin = st.text_input("Usuário")
             senha_admin = st.text_input("Senha", type="password")
-            entrar_admin = st.form_submit_button("Entrar como administrador")
+            entrar_admin = st.form_submit_button("Entrar")
 
         if entrar_admin:
             if usuario_admin == ADMIN_USUARIO and senha_admin == ADMIN_SENHA:
