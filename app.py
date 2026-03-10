@@ -570,15 +570,17 @@ try:
                     indice_categoria = opcoes_categoria.index(categoria_atual) if categoria_atual in opcoes_categoria else 0
                     indice_posicao = OPCOES_POSICAO.index(posicao_atual) if posicao_atual in OPCOES_POSICAO else 0
 
+                    posicao_editar = st.selectbox("Nova posição", OPCOES_POSICAO, index=indice_posicao)
+
                     categoria_editar = st.radio(
                         "Nova categoria",
                         opcoes_categoria,
                         index=indice_categoria,
                         horizontal=True
                     )
-                    posicao_editar = st.selectbox("Nova posição", OPCOES_POSICAO, index=indice_posicao)
-                    salvar_edicao = st.form_submit_button("Atualizar jogador")
 
+                    salvar_edicao = st.form_submit_button("Atualizar jogador")           
+                
                 if salvar_edicao:
                     idx = df_cadastro.index[df_cadastro["NOME"] == jogador_editar][0]
                     linha_atualizada = montar_linha_cadastro(jogador_editar, categoria_editar, normalizar_posicao(posicao_editar))
