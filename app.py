@@ -877,7 +877,7 @@ aplicar_estilo_global()
 # SIDEBAR - LOGIN ADMIN
 # ==========================================================
 with st.sidebar:
-    st.header("ACESSO AO SISTEMA SERENO FC")
+    st.header("ACESSO AO SISTEMA SERENO")
 
     if not st.session_state.admin_autenticado:
         with st.form("form_login_admin", clear_on_submit=True):
