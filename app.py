@@ -75,7 +75,7 @@ def aplicar_estilo_global():
         }
 
         .sereno-titulo {
-            font-size: 3.30rem; /* Aumentado 40% */
+            font-size: 4.95rem; /* Aumentado mais 50% */
             font-weight: 800;
             color: #111827;
             margin: 0;
@@ -221,11 +221,15 @@ def aplicar_estilo_global():
         div.element-container:has(#btn-marcar-nao),
         div.element-container:has(#btn-atualizar-dados),
         div.element-container:has(#btn-sortear),
-        div.element-container:has(#btn-limpar) {
+        div.element-container:has(#btn-limpar),
+        div.element-container:has(#btn-atualizar-presenca) {
             display: none !important;
         }
 
         /* Cores Cirúrgicas para aba Presença */
+        div.element-container:has(#btn-atualizar-presenca) + div.element-container div.stButton > button {
+            background-color: #f3f4f6 !important; border-color: #e5e7eb !important; color: #1f2937 !important;
+        }
         div.element-container:has(#btn-salvar-presenca) + div.element-container div.stButton > button {
             background-color: #d1fae5 !important; border-color: #a7f3d0 !important; color: #065f46 !important;
         }
@@ -1014,6 +1018,13 @@ try:
     # ABA 3 - PRESENÇA
     # ======================================================
     with abas[2]:
+        st.markdown('<div id="btn-atualizar-presenca" style="display:none;"></div>', unsafe_allow_html=True)
+        if st.button("🔄 Atualizar Presenças", use_container_width=True):
+            limpar_cache_planilha()
+            df_fresco = sincronizar_lista_presenca(mapa_abas, forcar_gravacao=False)
+            aplicar_df_presenca_ao_estado(df_fresco)
+            st.rerun()
+
         df_presenca = sincronizar_lista_presenca(mapa_abas, forcar_gravacao=False)
         df_presenca["NOME"] = df_presenca["NOME"].astype(str).str.strip()
         df_presenca = df_presenca[df_presenca["NOME"] != ""].reset_index(drop=True)
