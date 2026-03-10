@@ -492,7 +492,7 @@ try:
         st.session_state.abas_inicializadas = True
 
     if st.session_state.admin_autenticado:
-        st.success("Modo administrador ativo.")
+        st.success("Login ativo.")
     else:
         st.info("Modo visualização ativo. Faça login na barra lateral para alterar dados.")
 
