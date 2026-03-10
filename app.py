@@ -667,7 +667,7 @@ try:
             st.dataframe(df_presenca, use_container_width=True, hide_index=True)
 
     with abas[2]:
-        st.subheader("Sorteio dos times")
+        st.subheader("")
 
         if st.session_state.admin_autenticado:
             col1, col2 = st.columns(2)
