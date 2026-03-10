@@ -391,7 +391,6 @@ def realizar_sorteio(mapa_abas):
     st.session_state.ultimo_sorteio_ts = time.time()
     st.session_state.exigir_senha_master_sorteio = False
     st.session_state.erro_senha_master_sorteio = ""
-    st.session_state.senha_master_sorteio_input = ""
 
     limpar_cache_planilha()
     st.success("Sorteio realizado com sucesso.")
@@ -417,9 +416,6 @@ if "exigir_senha_master_sorteio" not in st.session_state:
 
 if "erro_senha_master_sorteio" not in st.session_state:
     st.session_state.erro_senha_master_sorteio = ""
-
-if "senha_master_sorteio_input" not in st.session_state:
-    st.session_state.senha_master_sorteio_input = ""
 
 # ==========================================================
 # SIDEBAR - LOGIN ADMIN
@@ -473,9 +469,6 @@ try:
 
     abas = st.tabs(["CADASTRO DE JOGADORES", "LISTA DE PRESENCA", "SORTEIO DOS TIMES"])
 
-    # ======================================================
-    # ABA 1 - CADASTRO
-    # ======================================================
     with abas[0]:
         st.subheader("Cadastro de jogadores")
 
@@ -577,13 +570,9 @@ try:
                     st.success("Jogador excluído com sucesso.")
                     st.rerun()
 
-    # ======================================================
-    # ABA 2 - PRESENÇA
-    # ======================================================
     with abas[1]:
         st.subheader("Lista de presença")
 
-        # sincroniza automaticamente mantendo ordem de cadastro
         df_presenca = sincronizar_lista_presenca(mapa_abas, forcar_gravacao=False)
         df_presenca["NOME"] = df_presenca["NOME"].astype(str).str.strip()
         df_presenca = df_presenca[df_presenca["NOME"] != ""].reset_index(drop=True)
@@ -641,9 +630,6 @@ try:
         else:
             st.dataframe(df_presenca, use_container_width=True, hide_index=True)
 
-    # ======================================================
-    # ABA 3 - SORTEIO
-    # ======================================================
     with abas[2]:
         st.subheader("Sorteio dos times")
 
@@ -682,20 +668,19 @@ try:
                 )
 
                 with st.container(border=True):
-                    st.text_input(
+                    senha_master_digitada = st.text_input(
                         "Senha master para novo sorteio",
                         type="password",
-                        key="senha_master_sorteio_input"
+                        key="senha_master_sorteio_widget"
                     )
 
                     c1, c2 = st.columns(2)
 
                     with c1:
                         if st.button("Autorizar novo sorteio", use_container_width=True):
-                            if st.session_state.senha_master_sorteio_input == SENHA_MASTER_SORTEIO:
+                            if senha_master_digitada == SENHA_MASTER_SORTEIO:
                                 st.session_state.exigir_senha_master_sorteio = False
                                 st.session_state.erro_senha_master_sorteio = ""
-                                st.session_state.senha_master_sorteio_input = ""
                                 realizar_sorteio(mapa_abas)
                             else:
                                 st.session_state.erro_senha_master_sorteio = "Senha master inválida."
@@ -704,7 +689,6 @@ try:
                         if st.button("Cancelar autorização", use_container_width=True):
                             st.session_state.exigir_senha_master_sorteio = False
                             st.session_state.erro_senha_master_sorteio = ""
-                            st.session_state.senha_master_sorteio_input = ""
                             st.rerun()
 
                     if st.session_state.erro_senha_master_sorteio:
