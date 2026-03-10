@@ -499,7 +499,7 @@ try:
     abas = st.tabs(["CADASTRO DE JOGADORES", "LISTA DE PRESENCA", "SORTEIO DOS TIMES"])
 
     with abas[0]:
-        st.subheader("Cadastro de jogadores")
+        st.subheader("")
 
         df_cadastro = ler_aba_com_cabecalho(mapa_abas, ABA_CADASTRO, COLUNAS_CADASTRO)
         df_cadastro["NOME"] = df_cadastro["NOME"].astype(str).str.strip()
