@@ -613,15 +613,15 @@ def formatar_tempo_restante(segundos):
     segundos_restantes = int(segundos % 60)
     return f"{minutos:02d}:{segundos_restantes:02d}"
 
-def distribuir_grupo_para_listas(nomes_embaralhados, time_1, time_2):
+def distribuir_grupo_para_listas(itens_embaralhados, time_1, time_2):
     proximo_time = 1 if len(time_1) <= len(time_2) else 2
 
-    for nome in nomes_embaralhados:
+    for item in itens_embaralhados:
         if proximo_time == 1:
-            time_1.append(nome)
+            time_1.append(item)
             proximo_time = 2
         else:
-            time_2.append(nome)
+            time_2.append(item)
             proximo_time = 1
 
 def sortear_times(df_cadastro, df_presenca):
@@ -641,7 +641,8 @@ def sortear_times(df_cadastro, df_presenca):
         if nome and presenca == "SIM" and nome in cadastro_map:
             presentes.append({
                 "nome": nome,
-                "categoria": cadastro_map[nome]["categoria"]
+                "categoria": cadastro_map[nome]["categoria"],
+                "posicao": cadastro_map[nome]["posicao"] # Mantém a posição guardada
             })
 
     grupos = {
@@ -651,11 +652,11 @@ def sortear_times(df_cadastro, df_presenca):
         "PEQUENO_JOGADOR": []
     }
 
-    # Agrupa apenas por Categoria (ignora a posição)
+    # Agrupa apenas por Categoria para o momento do sorteio (ignora a posição no sorteio)
     for jogador in presentes:
         categoria = jogador["categoria"]
         if categoria in grupos:
-            grupos[categoria].append(jogador["nome"])
+            grupos[categoria].append(jogador) # Passa o dicionário completo do jogador
 
     # Embaralha os jogadores dentro de cada categoria
     for categoria in grupos:
@@ -663,17 +664,34 @@ def sortear_times(df_cadastro, df_presenca):
 
     ordem_categorias = ["MENSALISTA", "DIARISTA", "CONVIDADO", "PEQUENO_JOGADOR"]
 
-    time_1 = []
-    time_2 = []
+    time_1_objs = []
+    time_2_objs = []
 
-    # Distribui alternadamente
+    # Distribui alternadamente (um para cada lado)
     for categoria in ordem_categorias:
-        nomes_grupo = grupos[categoria]
-        if nomes_grupo:
-            distribuir_grupo_para_listas(nomes_grupo, time_1, time_2)
+        jogadores_grupo = grupos[categoria]
+        if jogadores_grupo:
+            distribuir_grupo_para_listas(jogadores_grupo, time_1_objs, time_2_objs)
 
-    time_1 = [nome for nome in time_1 if str(nome).strip()]
-    time_2 = [nome for nome in time_2 if str(nome).strip()]
+    # Função que define o peso de cada jogador para a reordenação final
+    def chave_ordenacao(jogador):
+        # 1º Critério: Categoria (menor número vai pro topo)
+        ordem_cat = {"MENSALISTA": 1, "DIARISTA": 2, "CONVIDADO": 3, "PEQUENO_JOGADOR": 4}
+        # 2º Critério: Posição
+        ordem_pos = {"ZAGUEIRO": 1, "MEIO CAMPO": 2, "ATACANTE": 3}
+        
+        val_cat = ordem_cat.get(jogador["categoria"], 99)
+        val_pos = ordem_pos.get(jogador["posicao"], 99)
+        
+        return (val_cat, val_pos)
+
+    # Reordena o Time 1 e o Time 2 independentemente para exibição
+    time_1_objs.sort(key=chave_ordenacao)
+    time_2_objs.sort(key=chave_ordenacao)
+
+    # Extrai apenas os nomes e remove possíveis vazios
+    time_1 = [obj["nome"] for obj in time_1_objs if str(obj["nome"]).strip()]
+    time_2 = [obj["nome"] for obj in time_2_objs if str(obj["nome"]).strip()]
 
     max_len = max(len(time_1), len(time_2))
     linhas_sorteio = []
