@@ -14,7 +14,7 @@ st.set_page_config(page_title="FUTEBOL_SERENO", layout="wide")
 # ==========================================================
 # CONFIGURAÇÕES GERAIS
 # ==========================================================
-ARQUIVO_CREDENCIAIS = "credenciais_google.json"
+INFO_CREDENCIAIS = dict(st.secrets["gcp_service_account"])
 NOME_PLANILHA = "FUTEBOL_SERENO"
 
 ABA_CADASTRO = "CADASTRO_JOGADORES"
@@ -54,8 +54,8 @@ def executar_com_retry(func, *args, **kwargs):
 # ==========================================================
 @st.cache_resource
 def conectar_gsheet():
-    creds = Credentials.from_service_account_file(
-        ARQUIVO_CREDENCIAIS,
+    creds = Credentials.from_service_account_info(
+        INFO_CREDENCIAIS,
         scopes=SCOPES
     )
     client = gspread.authorize(creds)
