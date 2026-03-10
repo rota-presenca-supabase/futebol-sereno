@@ -26,6 +26,7 @@ COLUNAS_PRESENCA = ["NOME", "PRESENCA"]
 COLUNAS_SORTEIO = ["ORDEM", "TIME_1", "TIME_2"]
 
 OPCOES_POSICAO = ["ZAGUEIRO", "MEIO CAMPO", "ATACANTE"]
+OPCOES_CATEGORIA = ["MENSALISTA", "DIARISTA", "CONVIDADO", "PEQUENO_JOGADOR"]
 
 SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",
@@ -48,7 +49,7 @@ SENHA_MASTER_SORTEIO = "123"
 # UTILITÁRIOS DE RESILIÊNCIA
 # ==========================================================
 def executar_com_retry(func, *args, **kwargs):
-    tentativas = 5
+    tentativas = 6
     espera_inicial = 1.5
 
     for tentativa in range(tentativas):
@@ -86,14 +87,54 @@ def obter_worksheet(mapa_abas, nome_aba):
     return mapa_abas[nome_aba]
 
 def limpar_cache_planilha():
-    conectar_gsheet.clear()
+    ler_valores_aba_cacheado.clear()
+
+# ==========================================================
+# CACHE DE LEITURA PARA REDUZIR 429
+# ==========================================================
+@st.cache_data(ttl=15)
+def ler_valores_aba_cacheado(nome_aba):
+    _, mapa_abas = conectar_gsheet()
+    ws = obter_worksheet(mapa_abas, nome_aba)
+    return executar_com_retry(ws.get_all_values)
+
+# ==========================================================
+# FUNÇÕES DE ESTILO
+# ==========================================================
+def formatar_opcao_vazia(texto):
+    return "Selecione..." if texto == "" else texto
+
+def estilizar_dataframe(df):
+    if df.empty:
+        return df
+
+    def aplicar_listras(row):
+        cor = "#f7f7f7" if row.name % 2 == 0 else "#ffffff"
+        return [f"background-color: {cor}"] * len(row)
+
+    styler = df.style.apply(aplicar_listras, axis=1)
+
+    try:
+        styler = styler.hide(axis="index")
+    except Exception:
+        try:
+            styler = styler.hide_index()
+        except Exception:
+            pass
+
+    return styler
+
+def exibir_tabela_estilizada(df):
+    if df.empty:
+        st.dataframe(df, use_container_width=True, hide_index=True)
+    else:
+        st.dataframe(estilizar_dataframe(df), use_container_width=True)
 
 # ==========================================================
 # FUNÇÕES DE LEITURA/ESCRITA
 # ==========================================================
 def ler_aba_com_cabecalho(mapa_abas, nome_aba, colunas_esperadas):
-    ws = obter_worksheet(mapa_abas, nome_aba)
-    valores = executar_com_retry(ws.get_all_values)
+    valores = ler_valores_aba_cacheado(nome_aba)
 
     if not valores:
         return pd.DataFrame(columns=colunas_esperadas)
@@ -141,6 +182,7 @@ def escrever_dataframe_na_aba(mapa_abas, nome_aba, df, colunas_esperadas):
 
     executar_com_retry(ws.clear)
     executar_com_retry(ws.update, "A1", valores)
+    limpar_cache_planilha()
 
 def inicializar_abas_se_necessario(mapa_abas):
     configuracoes = [
@@ -172,6 +214,8 @@ def inicializar_abas_se_necessario(mapa_abas):
                 executar_com_retry(ws.clear)
                 executar_com_retry(ws.update, "A1", novos_valores)
 
+    limpar_cache_planilha()
+
 # ==========================================================
 # FUNÇÕES DE NEGÓCIO
 # ==========================================================
@@ -181,6 +225,10 @@ def normalizar_nome(nome):
 def normalizar_posicao(posicao):
     p = str(posicao).strip().upper()
     return p if p in OPCOES_POSICAO else ""
+
+def normalizar_categoria(categoria):
+    c = str(categoria).strip().upper()
+    return c if c in OPCOES_CATEGORIA else ""
 
 def chave_checkbox_presenca(nome):
     return f"presenca_checkbox::{normalizar_nome(nome)}"
@@ -406,7 +454,6 @@ def realizar_sorteio(mapa_abas):
     st.session_state.erro_senha_master_acao = ""
     st.session_state.tipo_acao_pendente = ""
 
-    limpar_cache_planilha()
     st.success("Sorteio realizado com sucesso.")
     st.rerun()
 
@@ -418,7 +465,6 @@ def realizar_limpeza_sorteio(mapa_abas):
     st.session_state.erro_senha_master_acao = ""
     st.session_state.tipo_acao_pendente = ""
 
-    limpar_cache_planilha()
     st.success("Sorteio limpo com sucesso.")
     st.rerun()
 
@@ -446,6 +492,9 @@ if "erro_senha_master_acao" not in st.session_state:
 if "tipo_acao_pendente" not in st.session_state:
     st.session_state.tipo_acao_pendente = ""
 
+if "pendente_excluir_jogador" not in st.session_state:
+    st.session_state.pendente_excluir_jogador = ""
+
 # ==========================================================
 # SIDEBAR - LOGIN ADMIN
 # ==========================================================
@@ -453,7 +502,7 @@ with st.sidebar:
     st.header("Acesso administrativo")
 
     if not st.session_state.admin_autenticado:
-        with st.form("form_login_admin"):
+        with st.form("form_login_admin", clear_on_submit=True):
             usuario_admin = st.text_input("Usuário")
             senha_admin = st.text_input("Senha", type="password")
             entrar_admin = st.form_submit_button("Entrar")
@@ -509,15 +558,19 @@ try:
         if st.session_state.admin_autenticado:
             st.markdown("### Adicionar novo jogador")
 
-            with st.form("form_cadastro"):
+            with st.form("form_cadastro", clear_on_submit=True):
                 nome_jogador = st.text_input("Nome do jogador")
 
-                posicao = st.selectbox("Posição", OPCOES_POSICAO)
+                posicao = st.selectbox(
+                    "Posição",
+                    [""] + OPCOES_POSICAO,
+                    format_func=formatar_opcao_vazia
+                )
 
-                categoria = st.radio(
+                categoria = st.selectbox(
                     "Categoria",
-                    ["MENSALISTA", "DIARISTA", "CONVIDADO", "PEQUENO_JOGADOR"],
-                    horizontal=True
+                    [""] + OPCOES_CATEGORIA,
+                    format_func=formatar_opcao_vazia
                 )
 
                 enviar_cadastro = st.form_submit_button("Salvar jogador")
@@ -525,9 +578,14 @@ try:
             if enviar_cadastro:
                 nome_jogador = normalizar_nome(nome_jogador)
                 posicao = normalizar_posicao(posicao)
+                categoria = normalizar_categoria(categoria)
 
                 if not nome_jogador:
                     st.error("Informe o nome do jogador.")
+                elif not posicao:
+                    st.error("Selecione a posição.")
+                elif not categoria:
+                    st.error("Selecione a categoria.")
                 elif nome_jogador.upper() in [x.upper() for x in df_cadastro["NOME"].tolist()]:
                     st.error("Esse jogador já está cadastrado.")
                 else:
@@ -537,7 +595,6 @@ try:
                     escrever_dataframe_na_aba(mapa_abas, ABA_CADASTRO, df_cadastro, COLUNAS_CADASTRO)
                     sincronizar_lista_presenca(mapa_abas, forcar_gravacao=False)
 
-                    limpar_cache_planilha()
                     st.success("Jogador cadastrado com sucesso.")
                     st.rerun()
         else:
@@ -553,64 +610,97 @@ try:
             df_exibir["CATEGORIA"] = df_exibir.apply(
                 lambda row: descobrir_categoria_jogador(row.to_dict()), axis=1
             )
-            st.dataframe(df_exibir[["NOME", "CATEGORIA", "POSICAO"]], use_container_width=True, hide_index=True)
+            exibir_tabela_estilizada(df_exibir[["NOME", "CATEGORIA", "POSICAO"]])
 
             if st.session_state.admin_autenticado:
                 st.markdown("### Atualizar jogador")
-                nomes_existentes = df_cadastro["NOME"].tolist()
+                nomes_existentes = [""] + df_cadastro["NOME"].tolist()
 
-                with st.form("form_editar"):
-                    jogador_editar = st.selectbox("Selecione o jogador", nomes_existentes)
-                    linha_jogador = df_cadastro[df_cadastro["NOME"] == jogador_editar].iloc[0].to_dict()
-
-                    categoria_atual = descobrir_categoria_jogador(linha_jogador)
-                    posicao_atual = normalizar_posicao(linha_jogador.get("POSICAO", ""))
-
-                    opcoes_categoria = ["MENSALISTA", "DIARISTA", "CONVIDADO", "PEQUENO_JOGADOR"]
-                    indice_categoria = opcoes_categoria.index(categoria_atual) if categoria_atual in opcoes_categoria else 0
-                    indice_posicao = OPCOES_POSICAO.index(posicao_atual) if posicao_atual in OPCOES_POSICAO else 0
-
-                    posicao_editar = st.selectbox("Nova posição", OPCOES_POSICAO, index=indice_posicao)
-
-                    categoria_editar = st.radio(
-                        "Nova categoria",
-                        opcoes_categoria,
-                        index=indice_categoria,
-                        horizontal=True
+                with st.form("form_editar", clear_on_submit=True):
+                    jogador_editar = st.selectbox(
+                        "Selecione o jogador",
+                        nomes_existentes,
+                        format_func=formatar_opcao_vazia
                     )
 
-                    salvar_edicao = st.form_submit_button("Atualizar jogador")           
-                
+                    posicao_editar = st.selectbox(
+                        "Nova posição",
+                        [""] + OPCOES_POSICAO,
+                        format_func=formatar_opcao_vazia
+                    )
+
+                    categoria_editar = st.selectbox(
+                        "Nova categoria",
+                        [""] + OPCOES_CATEGORIA,
+                        format_func=formatar_opcao_vazia
+                    )
+
+                    salvar_edicao = st.form_submit_button("Atualizar jogador")
+
                 if salvar_edicao:
-                    idx = df_cadastro.index[df_cadastro["NOME"] == jogador_editar][0]
-                    linha_atualizada = montar_linha_cadastro(jogador_editar, categoria_editar, normalizar_posicao(posicao_editar))
-                    for col in COLUNAS_CADASTRO:
-                        df_cadastro.at[idx, col] = linha_atualizada[col]
+                    if not jogador_editar:
+                        st.error("Selecione o jogador.")
+                    elif not posicao_editar:
+                        st.error("Selecione a nova posição.")
+                    elif not categoria_editar:
+                        st.error("Selecione a nova categoria.")
+                    else:
+                        idx = df_cadastro.index[df_cadastro["NOME"] == jogador_editar][0]
+                        linha_atualizada = montar_linha_cadastro(
+                            jogador_editar,
+                            normalizar_categoria(categoria_editar),
+                            normalizar_posicao(posicao_editar)
+                        )
+                        for col in COLUNAS_CADASTRO:
+                            df_cadastro.at[idx, col] = linha_atualizada[col]
 
-                    escrever_dataframe_na_aba(mapa_abas, ABA_CADASTRO, df_cadastro, COLUNAS_CADASTRO)
-                    sincronizar_lista_presenca(mapa_abas, forcar_gravacao=False)
+                        escrever_dataframe_na_aba(mapa_abas, ABA_CADASTRO, df_cadastro, COLUNAS_CADASTRO)
+                        sincronizar_lista_presenca(mapa_abas, forcar_gravacao=False)
 
-                    limpar_cache_planilha()
-                    st.success("Jogador atualizado com sucesso.")
-                    st.rerun()
+                        st.success("Jogador atualizado com sucesso.")
+                        st.rerun()
 
                 st.markdown("### Excluir jogador")
-                with st.form("form_excluir"):
+                with st.form("form_excluir", clear_on_submit=True):
                     jogador_excluir = st.selectbox(
                         "Selecione o jogador para excluir",
                         nomes_existentes,
+                        format_func=formatar_opcao_vazia,
                         key="excluir_jogador"
                     )
                     excluir = st.form_submit_button("Excluir jogador")
 
                 if excluir:
-                    df_cadastro = df_cadastro[df_cadastro["NOME"] != jogador_excluir].reset_index(drop=True)
-                    escrever_dataframe_na_aba(mapa_abas, ABA_CADASTRO, df_cadastro, COLUNAS_CADASTRO)
-                    sincronizar_lista_presenca(mapa_abas, forcar_gravacao=False)
+                    if not jogador_excluir:
+                        st.error("Selecione o jogador para excluir.")
+                    else:
+                        st.session_state.pendente_excluir_jogador = jogador_excluir
+                        st.rerun()
 
-                    limpar_cache_planilha()
-                    st.success("Jogador excluído com sucesso.")
-                    st.rerun()
+                if st.session_state.pendente_excluir_jogador:
+                    with st.container(border=True):
+                        st.warning(
+                            f"Deseja realmente excluir o jogador "
+                            f"'{st.session_state.pendente_excluir_jogador}'?"
+                        )
+
+                        c1, c2 = st.columns(2)
+
+                        with c1:
+                            if st.button("Confirmar exclusão", use_container_width=True):
+                                jogador_alvo = st.session_state.pendente_excluir_jogador
+                                df_cadastro = df_cadastro[df_cadastro["NOME"] != jogador_alvo].reset_index(drop=True)
+                                escrever_dataframe_na_aba(mapa_abas, ABA_CADASTRO, df_cadastro, COLUNAS_CADASTRO)
+                                sincronizar_lista_presenca(mapa_abas, forcar_gravacao=False)
+
+                                st.session_state.pendente_excluir_jogador = ""
+                                st.success("Jogador excluído com sucesso.")
+                                st.rerun()
+
+                        with c2:
+                            if st.button("Cancelar exclusão", use_container_width=True):
+                                st.session_state.pendente_excluir_jogador = ""
+                                st.rerun()
 
     with abas[1]:
         st.subheader("")
@@ -630,7 +720,6 @@ try:
                     escrever_dataframe_na_aba(mapa_abas, ABA_PRESENCA, novo_df_presenca, COLUNAS_PRESENCA)
                     aplicar_df_presenca_ao_estado(novo_df_presenca)
 
-                    limpar_cache_planilha()
                     st.success("Lista de presença salva com sucesso.")
                     st.rerun()
 
@@ -641,7 +730,6 @@ try:
                         escrever_dataframe_na_aba(mapa_abas, ABA_PRESENCA, df_presenca, COLUNAS_PRESENCA)
                         forcar_estado_checkboxes_presenca(df_presenca, True)
 
-                    limpar_cache_planilha()
                     st.success("Todos os jogadores foram marcados como SIM.")
                     st.rerun()
 
@@ -652,7 +740,6 @@ try:
                         escrever_dataframe_na_aba(mapa_abas, ABA_PRESENCA, df_presenca, COLUNAS_PRESENCA)
                         forcar_estado_checkboxes_presenca(df_presenca, False)
 
-                    limpar_cache_planilha()
                     st.success("Presenças zeradas com sucesso.")
                     st.rerun()
 
@@ -670,7 +757,7 @@ try:
         if df_presenca.empty:
             st.info("Nenhum jogador disponível na lista de presença.")
         else:
-            st.dataframe(df_presenca, use_container_width=True, hide_index=True)
+            exibir_tabela_estilizada(df_presenca)
 
     with abas[2]:
         st.subheader("")
@@ -758,7 +845,7 @@ try:
             st.info("Ainda não há sorteio realizado.")
         else:
             st.markdown("### Resultado do sorteio")
-            st.dataframe(df_sorteio, use_container_width=True, hide_index=True)
+            exibir_tabela_estilizada(df_sorteio)
 
             qtd_time_1 = (df_sorteio["TIME_1"].astype(str).str.strip() != "").sum()
             qtd_time_2 = (df_sorteio["TIME_2"].astype(str).str.strip() != "").sum()
