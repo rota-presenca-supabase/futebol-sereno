@@ -60,7 +60,7 @@ def aplicar_estilo_global():
         """
         <style>
         .block-container {
-            padding-top: 1rem;
+            padding-top: 3rem;
             padding-bottom: 2rem;
         }
 
@@ -79,7 +79,7 @@ def aplicar_estilo_global():
             font-weight: 800;
             color: #111827;
             margin: 0;
-            line-height: 1.05;
+            line-height: 1.3;
         }
 
         .sereno-subtitulo {
@@ -633,6 +633,9 @@ def sortear_times(df_cadastro, df_presenca):
             if nomes_grupo:
                 distribuir_grupo_para_listas(nomes_grupo, time_1, time_2)
 
+    time_1 = [nome for nome in time_1 if str(nome).strip()]
+    time_2 = [nome for nome in time_2 if str(nome).strip()]
+
     max_len = max(len(time_1), len(time_2))
     linhas_sorteio = []
 
@@ -1115,13 +1118,11 @@ try:
     # ======================================================
     # LOGO NO FINAL DA PÁGINA
     # ======================================================
-    st.markdown("<div class='sereno-logo-rodape'>", unsafe_allow_html=True)
-    col_logo_esq2, col_logo_centro2, col_logo_dir2 = st.columns([1, 1, 1])
-    with col_logo_centro2:
+    col_logo_esq, col_logo_centro, col_logo_dir = st.columns([1, 1.5, 1])
+    with col_logo_centro:
         logo_path = Path("SERENO FC.png")
         if logo_path.exists():
-            st.image(str(logo_path), width=210)
-    st.markdown("</div>", unsafe_allow_html=True)
+            st.image(str(logo_path), use_container_width=True)
 
 except SpreadsheetNotFound:
     st.error("Planilha 'FUTEBOL_SERENO' não encontrada ou não compartilhada com a service account.")
