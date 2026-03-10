@@ -891,7 +891,7 @@ try:
         df_cadastro = df_cadastro[df_cadastro["NOME"] != ""].reset_index(drop=True)
 
         if st.session_state.admin_autenticado:
-            st.markdown("### Adicionar novo jogador")
+            st.markdown("### Adicionar jogador")
 
             with st.form("form_cadastro", clear_on_submit=True):
                 nome_jogador = st.text_input("Nome do jogador")
@@ -1033,7 +1033,7 @@ try:
         df_cadastro["POSICAO"] = df_cadastro["POSICAO"].astype(str).str.strip()
         df_cadastro = df_cadastro[df_cadastro["NOME"] != ""].reset_index(drop=True)
 
-        st.markdown("### Jogadores cadastrados")
+        # st.markdown("### Jogadores cadastrados")
 
         if df_cadastro.empty:
             st.info("Nenhum jogador cadastrado ainda.")
