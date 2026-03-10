@@ -1100,7 +1100,7 @@ try:
                 st.info("Nenhum jogador disponível na lista de presença. Cadastre jogadores na aba CADASTRO DE JOGADORES.")
             else:
                 st.markdown("<div class='sereno-card-presenca'>", unsafe_allow_html=True)
-                st.markdown("<div class='sereno-secao-titulo'>Marcação de Presença</div>", unsafe_allow_html=True)
+                # st.markdown("<div class='sereno-secao-titulo'>Marcação de Presença</div>", unsafe_allow_html=True)
 
                 for _, row in df_presenca.iterrows():
                     nome = normalizar_nome(row["NOME"])
