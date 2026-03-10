@@ -463,7 +463,7 @@ try:
         df_presenca = df_presenca[df_presenca["NOME"] != ""].reset_index(drop=True)
 
         if st.session_state.admin_autenticado:
-            col1, col2 = st.columns(2)
+            col1, col2, col3 = st.columns(3)
 
             with col1:
                 if st.button("Sincronizar nomes com cadastro", use_container_width=True):
@@ -473,6 +473,16 @@ try:
                     st.rerun()
 
             with col2:
+                if st.button("Marcar todos como SIM", use_container_width=True):
+                    if not df_presenca.empty:
+                        df_presenca["PRESENCA"] = "SIM"
+                        escrever_dataframe_na_aba(mapa_abas, ABA_PRESENCA, df_presenca, COLUNAS_PRESENCA)
+
+                    limpar_cache_planilha()
+                    st.success("Todos os jogadores foram marcados como SIM.")
+                    st.rerun()
+
+            with col3:
                 if st.button("Marcar todos como NÃO", use_container_width=True):
                     if not df_presenca.empty:
                         df_presenca["PRESENCA"] = "NÃO"
