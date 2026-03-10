@@ -164,6 +164,24 @@ def aplicar_estilo_global():
             box-shadow: 0 4px 14px rgba(0,0,0,0.04);
         }
 
+        /* Estilo específico para campos de texto dentro do form do Admin (Login) no Sidebar */
+        /* Isso garante que as caixas fiquem visíveis para leigos e tenham profundidade */
+        div[data-testid="stSidebar"] div[data-testid="stForm"] .stTextInput div[data-baseweb="input"] {
+            background-color: #ffffff !important; /* Força fundo branco */
+            border: 2px solid #d1d5db !important; /* Borda visível cinza média */
+            border-radius: 12px !important;
+            /* Sensação de profundidade com uma sombra interna soft */
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05) !important;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        /* Efeito no Focus da caixa de texto do Login */
+        div[data-testid="stSidebar"] div[data-testid="stForm"] .stTextInput div[data-baseweb="input"]:focus-within {
+            border-color: #3b82f6 !important; /* Azul no focus */
+            /* Realça a profundidade ao focar */
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05), 0 0 0 3px rgba(59, 130, 246, 0.2) !important;
+        }
+
         div.stButton > button {
             border-radius: 12px !important;
             font-weight: 700 !important;
@@ -907,8 +925,9 @@ with st.sidebar:
 
     if not st.session_state.admin_autenticado:
         with st.form("form_login_admin", clear_on_submit=True):
-            usuario_admin = st.text_input("Usuário")
-            senha_admin = st.text_input("Senha", type="password")
+            # Adicionados Placeholders para leigos saberem onde digitar
+            usuario_admin = st.text_input("Usuário", placeholder="Digite o usuário...")
+            senha_admin = st.text_input("Senha", type="password", placeholder="Digite a senha...")
             entrar_admin = st.form_submit_button("Entrar")
 
         if entrar_admin:
