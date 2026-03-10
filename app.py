@@ -58,7 +58,7 @@ def executar_com_retry(func, *args, **kwargs):
 # ==========================================================
 # CONEXÃO
 # ==========================================================
-@st.cache_data(ttl=30)
+@st.cache_resource
 def conectar_gsheet():
     creds = Credentials.from_service_account_info(
         INFO_CREDENCIAIS,
@@ -353,9 +353,6 @@ try:
 
     abas = st.tabs(["CADASTRO_JOGADORES", "LISTA_PRESENCA", "LISTA_SORTEIO"])
 
-    # ======================================================
-    # ABA 1 - CADASTRO
-    # ======================================================
     with abas[0]:
         st.subheader("Cadastro de jogadores")
 
@@ -458,9 +455,6 @@ try:
                     st.success("Jogador excluído com sucesso.")
                     st.rerun()
 
-    # ======================================================
-    # ABA 2 - PRESENÇA
-    # ======================================================
     with abas[1]:
         st.subheader("Lista de presença")
 
@@ -522,9 +516,6 @@ try:
         else:
             st.dataframe(df_presenca, use_container_width=True, hide_index=True)
 
-    # ======================================================
-    # ABA 3 - SORTEIO
-    # ======================================================
     with abas[2]:
         st.subheader("Sorteio dos times")
 
