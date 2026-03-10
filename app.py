@@ -911,7 +911,7 @@ try:
         "CADASTRO     ",
         "JOGADORES     ",
         "PRESENÇA     ",
-        "SORTEIO DOS TIMES"
+        "SORTEIO"
     ])
 
     # ======================================================
