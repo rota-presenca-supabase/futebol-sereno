@@ -292,22 +292,6 @@ def formatar_tempo_restante(segundos):
     segundos_restantes = int(segundos % 60)
     return f"{minutos:02d}:{segundos_restantes:02d}"
 
-def distribuir_bloco_em_dupla(nomes_embaralhados, qtd_total_time1, qtd_total_time2):
-    bloco_time1 = []
-    bloco_time2 = []
-
-    proximo_time = 1 if qtd_total_time1 <= qtd_total_time2 else 2
-
-    for nome in nomes_embaralhados:
-        if proximo_time == 1:
-            bloco_time1.append(nome)
-            proximo_time = 2
-        else:
-            bloco_time2.append(nome)
-            proximo_time = 1
-
-    return bloco_time1, bloco_time2
-
 def sortear_times(df_cadastro, df_presenca):
     cadastro_map = {}
     for _, row in df_cadastro.iterrows():
@@ -346,37 +330,44 @@ def sortear_times(df_cadastro, df_presenca):
         for posicao in grupos[categoria]:
             random.shuffle(grupos[categoria][posicao])
 
+    time_1 = []
+    time_2 = []
+    proximo_time = 1
+
+    def adicionar_jogador(nome_jogador):
+        nonlocal proximo_time, time_1, time_2
+
+        if len(time_1) < len(time_2):
+            time_1.append(nome_jogador)
+            proximo_time = 2
+        elif len(time_2) < len(time_1):
+            time_2.append(nome_jogador)
+            proximo_time = 1
+        else:
+            if proximo_time == 1:
+                time_1.append(nome_jogador)
+                proximo_time = 2
+            else:
+                time_2.append(nome_jogador)
+                proximo_time = 1
+
     ordem_categorias = ["MENSALISTA", "DIARISTA", "CONVIDADO", "PEQUENO_JOGADOR"]
     ordem_posicoes = ["ZAGUEIRO", "MEIO CAMPO", "ATACANTE"]
 
-    linhas_sorteio = []
-    total_time1 = 0
-    total_time2 = 0
-    ordem = 1
-
     for categoria in ordem_categorias:
         for posicao in ordem_posicoes:
-            nomes_grupo = grupos[categoria][posicao]
-            if not nomes_grupo:
-                continue
+            for nome_jogador in grupos[categoria][posicao]:
+                adicionar_jogador(nome_jogador)
 
-            bloco_time1, bloco_time2 = distribuir_bloco_em_dupla(
-                nomes_grupo,
-                total_time1,
-                total_time2
-            )
+    max_len = max(len(time_1), len(time_2), 0)
+    linhas_sorteio = []
 
-            max_len_bloco = max(len(bloco_time1), len(bloco_time2))
-            for i in range(max_len_bloco):
-                linhas_sorteio.append({
-                    "ORDEM": str(ordem),
-                    "TIME_1": bloco_time1[i] if i < len(bloco_time1) else "",
-                    "TIME_2": bloco_time2[i] if i < len(bloco_time2) else "",
-                })
-                ordem += 1
-
-            total_time1 += len(bloco_time1)
-            total_time2 += len(bloco_time2)
+    for i in range(max_len):
+        linhas_sorteio.append({
+            "ORDEM": str(i + 1),
+            "TIME_1": time_1[i] if i < len(time_1) else "",
+            "TIME_2": time_2[i] if i < len(time_2) else "",
+        })
 
     df_sorteio = pd.DataFrame(linhas_sorteio, columns=COLUNAS_SORTEIO)
     return df_sorteio
