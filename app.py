@@ -215,10 +215,16 @@ def aplicar_estilo_global():
         div.element-container:has(#btn-atualizar-dados),
         div.element-container:has(#btn-sortear),
         div.element-container:has(#btn-limpar),
-        div.element-container:has(#btn-atualizar-presenca) {
+        div.element-container:has(#btn-atualizar-presenca),
+        div.element-container:has(#btn-salvar-jogador),
+        div.element-container:has(#btn-atualizar-jogador),
+        div.element-container:has(#btn-excluir-jogador),
+        div.element-container:has(#btn-confirmar-exclusao),
+        div.element-container:has(#btn-cancelar-exclusao) {
             display: none !important;
         }
 
+        /* Cores Cirúrgicas para aba Presença */
         div.element-container:has(#btn-atualizar-presenca) + div.element-container div.stButton > button {
             background-color: #f3f4f6 !important; border-color: #e5e7eb !important; color: #1f2937 !important;
         }
@@ -232,6 +238,7 @@ def aplicar_estilo_global():
             background-color: #fee2e2 !important; border-color: #fecaca !important; color: #991b1b !important;
         }
 
+        /* Cores Cirúrgicas para aba Sorteio */
         div.element-container:has(#btn-atualizar-dados) + div.element-container div.stButton > button {
             background-color: #f3f4f6 !important; border-color: #e5e7eb !important; color: #1f2937 !important;
         }
@@ -240,6 +247,23 @@ def aplicar_estilo_global():
         }
         div.element-container:has(#btn-limpar) + div.element-container div.stButton > button {
             background-color: #ffedd5 !important; border-color: #fed7aa !important; color: #9a3412 !important;
+        }
+        
+        /* Cores Cirúrgicas para aba Cadastro */
+        div.element-container:has(#btn-salvar-jogador) + div.element-container button {
+            background-color: #d1fae5 !important; border-color: #a7f3d0 !important; color: #065f46 !important;
+        }
+        div.element-container:has(#btn-atualizar-jogador) + div.element-container button {
+            background-color: #dbeafe !important; border-color: #bfdbfe !important; color: #1e40af !important;
+        }
+        div.element-container:has(#btn-excluir-jogador) + div.element-container button {
+            background-color: #fee2e2 !important; border-color: #fecaca !important; color: #991b1b !important;
+        }
+        div.element-container:has(#btn-confirmar-exclusao) + div.element-container button {
+            background-color: #fee2e2 !important; border-color: #fecaca !important; color: #991b1b !important;
+        }
+        div.element-container:has(#btn-cancelar-exclusao) + div.element-container button {
+            background-color: #f3f4f6 !important; border-color: #e5e7eb !important; color: #1f2937 !important;
         }
         </style>
         """,
@@ -940,7 +964,8 @@ try:
                     [""] + OPCOES_CATEGORIA,
                     format_func=formatar_opcao_vazia
                 )
-
+                
+                st.markdown('<div id="btn-salvar-jogador" style="display:none;"></div>', unsafe_allow_html=True)
                 enviar_cadastro = st.form_submit_button("Salvar jogador")
 
             if enviar_cadastro:
@@ -987,7 +1012,8 @@ try:
                     [""] + OPCOES_CATEGORIA,
                     format_func=formatar_opcao_vazia
                 )
-
+                
+                st.markdown('<div id="btn-atualizar-jogador" style="display:none;"></div>', unsafe_allow_html=True)
                 salvar_edicao = st.form_submit_button("Atualizar jogador")
 
             if salvar_edicao:
@@ -1021,6 +1047,8 @@ try:
                     format_func=formatar_opcao_vazia,
                     key="excluir_jogador"
                 )
+                
+                st.markdown('<div id="btn-excluir-jogador" style="display:none;"></div>', unsafe_allow_html=True)
                 excluir = st.form_submit_button("Excluir jogador")
 
             if excluir:
@@ -1040,6 +1068,7 @@ try:
                     c1, c2 = st.columns(2)
 
                     with c1:
+                        st.markdown('<div id="btn-confirmar-exclusao" style="display:none;"></div>', unsafe_allow_html=True)
                         if st.button("Confirmar exclusão", use_container_width=True):
                             jogador_alvo = st.session_state.pendente_excluir_jogador
                             df_cadastro = df_cadastro[df_cadastro["NOME"] != jogador_alvo].reset_index(drop=True)
@@ -1051,6 +1080,7 @@ try:
                             st.rerun()
 
                     with c2:
+                        st.markdown('<div id="btn-cancelar-exclusao" style="display:none;"></div>', unsafe_allow_html=True)
                         if st.button("Cancelar exclusão", use_container_width=True):
                             st.session_state.pendente_excluir_jogador = ""
                             st.rerun()
