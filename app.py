@@ -43,8 +43,8 @@ FORMATO_SORTEIO = "%Y-%m-%d %H:%M:%S"
 # ==========================================================
 # ACESSO ADMINISTRADOR
 # ==========================================================
-ADMIN_USUARIO = "sereno"
-ADMIN_SENHA = "sereno"
+ADMIN_USUARIO = "Sereno"
+ADMIN_SENHA = "fc"
 
 # ==========================================================
 # CONTROLE DE NOVO SORTEIO / LIMPAR SORTEIO
