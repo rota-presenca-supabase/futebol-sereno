@@ -891,6 +891,9 @@ if "tipo_acao_pendente" not in st.session_state:
 if "pendente_excluir_jogador" not in st.session_state:
     st.session_state.pendente_excluir_jogador = ""
 
+if "forcar_atualizacao_presenca" not in st.session_state:
+    st.session_state.forcar_atualizacao_presenca = False
+
 # ==========================================================
 # ESTILO
 # ==========================================================
@@ -912,8 +915,8 @@ with st.sidebar:
             if usuario_admin == ADMIN_USUARIO and senha_admin == ADMIN_SENHA:
                 st.session_state.admin_autenticado = True
                 st.session_state.admin_erro_login = ""
-                # Limpa o cache imediatamente para puxar presenças frescas no login
-                limpar_cache_planilha()
+                # Liga o gatilho para forçar a atualização dos botões de presença na tela principal
+                st.session_state.forcar_atualizacao_presenca = True
                 st.rerun()
             else:
                 st.session_state.admin_erro_login = "Usuário ou Senha inválidos!"
@@ -1135,6 +1138,14 @@ try:
     # ======================================================
     with abas[2]:
         st.markdown('<div id="btn-atualizar-presenca" style="display:none;"></div>', unsafe_allow_html=True)
+        
+        # Gatilho ativado pelo Login (Força a atualização dos dados e reseta a memória das caixas)
+        if st.session_state.get("forcar_atualizacao_presenca", False):
+            limpar_cache_planilha()
+            df_fresco = sincronizar_lista_presenca(mapa_abas, forcar_gravacao=False)
+            aplicar_df_presenca_ao_estado(df_fresco)
+            st.session_state.forcar_atualizacao_presenca = False
+
         if st.button("🔄 Atualizar Presenças", use_container_width=True):
             limpar_cache_planilha()
             df_fresco = sincronizar_lista_presenca(mapa_abas, forcar_gravacao=False)
