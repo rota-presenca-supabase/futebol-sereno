@@ -896,9 +896,9 @@ with st.sidebar:
         if st.session_state.admin_erro_login:
             st.error(st.session_state.admin_erro_login)
 
-        st.info("Sem login, o app fica em modo visualização.")
+        st.info("Faça Login para acessar os dados!")
     else:
-        st.success("Login autenticado.")
+        st.success("Login Autenticado.")
         st.write(f"Usuário: {ADMIN_USUARIO}")
 
         if st.button("Sair", use_container_width=True):
