@@ -351,7 +351,7 @@ try:
     else:
         st.info("Modo visualização ativo. Faça login na barra lateral para alterar dados.")
 
-    abas = st.tabs(["CADASTRO_JOGADORES", "LISTA_PRESENCA", "LISTA_SORTEIO"])
+    abas = st.tabs(["CADASTRO DE JOGADORES", "LISTA_PRESENCA", "LISTA_SORTEIO"])
 
     with abas[0]:
         st.subheader("Cadastro de jogadores")
