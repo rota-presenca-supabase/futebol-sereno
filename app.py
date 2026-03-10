@@ -1138,7 +1138,7 @@ try:
 
                 st.markdown("</div>", unsafe_allow_html=True)
         else:
-            st.warning("Alterações de presença restritas ao administrador.")
+            st.warning("Alterações de presença restritas ao Adm.")
 
     # ======================================================
     # ABA 4 - SORTEIO
