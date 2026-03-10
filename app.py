@@ -352,7 +352,7 @@ def parse_timestamp_sorteio(texto):
 # ==========================================================
 def gerar_texto_whatsapp_sorteio(df_sorteio):
     if df_sorteio.empty:
-        return "Ainda não há sorteio realizado."
+        return "Ainda não há sorteio realizado!"
 
     df = df_sorteio.copy()
 
