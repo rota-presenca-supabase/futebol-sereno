@@ -337,7 +337,7 @@ with st.sidebar:
 # ==========================================================
 # APP
 # ==========================================================
-st.title("SERENO FC")
+st.title("Sereno F.C.")
 
 try:
     planilha, mapa_abas = conectar_gsheet()
