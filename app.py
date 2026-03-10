@@ -328,10 +328,25 @@ def render_table_html(df, centralizar_colunas=None):
     linhas_html = ""
     for _, row in df.iterrows():
         linhas_html += "<tr>"
+        
+        # Identifica se a linha atual é de reservas (Ordem >= 12)
+        is_reserva = False
+        if "Ordem" in df.columns:
+            try:
+                if int(row["Ordem"]) >= 12:
+                    is_reserva = True
+            except ValueError:
+                pass
+
         for col in df.columns:
             valor = row[col]
             valor = "" if pd.isna(valor) else str(valor)
             classe = "sereno-centralizado" if col in centralizar_colunas else ""
+            
+            # Aplica vermelho e negrito se for reserva e for nome de jogador (Time A ou Time B)
+            if is_reserva and col in ["Time A", "Time B"] and str(valor).strip() != "":
+                valor = f"<span style='color: #dc2626; font-weight: bold;'>{valor}</span>"
+                
             linhas_html += f"<td class='{classe}'>{valor}</td>"
         linhas_html += "</tr>"
 
