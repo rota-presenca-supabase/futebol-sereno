@@ -37,6 +37,12 @@ ADMIN_USUARIO = "Administrador"
 ADMIN_SENHA = "Administrador@123"
 
 # ==========================================================
+# CONTROLE DE NOVO SORTEIO
+# ==========================================================
+TEMPO_BLOQUEIO_SORTEIO_SEGUNDOS = 10 * 60
+SENHA_MASTER_SORTEIO = "123"
+
+# ==========================================================
 # UTILITÁRIOS DE RESILIÊNCIA
 # ==========================================================
 def executar_com_retry(func, *args, **kwargs):
@@ -170,6 +176,9 @@ def inicializar_abas_se_necessario(mapa_abas):
 def normalizar_nome(nome):
     return str(nome).strip()
 
+def chave_checkbox_presenca(nome):
+    return f"presenca_checkbox::{normalizar_nome(nome)}"
+
 def montar_linha_cadastro(nome, categoria):
     return {
         "NOME": nome,
@@ -190,7 +199,7 @@ def descobrir_categoria_jogador(linha):
         return "PEQUENO_JOGADOR"
     return ""
 
-def sincronizar_lista_presenca(mapa_abas):
+def montar_df_presenca_sincronizado(mapa_abas):
     df_cadastro = ler_aba_com_cabecalho(mapa_abas, ABA_CADASTRO, COLUNAS_CADASTRO)
     df_presenca = ler_aba_com_cabecalho(mapa_abas, ABA_PRESENCA, COLUNAS_PRESENCA)
 
@@ -213,7 +222,68 @@ def sincronizar_lista_presenca(mapa_abas):
         })
 
     novo_df_presenca = pd.DataFrame(novas_linhas, columns=COLUNAS_PRESENCA)
-    escrever_dataframe_na_aba(mapa_abas, ABA_PRESENCA, novo_df_presenca, COLUNAS_PRESENCA)
+    df_presenca_atual_normalizado = pd.DataFrame(columns=COLUNAS_PRESENCA)
+
+    if not df_presenca.empty:
+        df_presenca_atual_normalizado = df_presenca.copy()
+        for col in COLUNAS_PRESENCA:
+            if col not in df_presenca_atual_normalizado.columns:
+                df_presenca_atual_normalizado[col] = ""
+        df_presenca_atual_normalizado = df_presenca_atual_normalizado[COLUNAS_PRESENCA].fillna("")
+
+    return novo_df_presenca, df_presenca_atual_normalizado
+
+def sincronizar_lista_presenca(mapa_abas, forcar_gravacao=False):
+    novo_df_presenca, df_presenca_atual = montar_df_presenca_sincronizado(mapa_abas)
+
+    atual = df_presenca_atual.astype(str).values.tolist() if not df_presenca_atual.empty else []
+    novo = novo_df_presenca.astype(str).values.tolist() if not novo_df_presenca.empty else []
+
+    if forcar_gravacao or atual != novo:
+        escrever_dataframe_na_aba(mapa_abas, ABA_PRESENCA, novo_df_presenca, COLUNAS_PRESENCA)
+
+    return novo_df_presenca
+
+def inicializar_estado_checkboxes_presenca(df_presenca):
+    for _, row in df_presenca.iterrows():
+        nome = normalizar_nome(row["NOME"])
+        if not nome:
+            continue
+        chave = chave_checkbox_presenca(nome)
+        if chave not in st.session_state:
+            st.session_state[chave] = str(row["PRESENCA"]).upper().strip() == "SIM"
+
+def forcar_estado_checkboxes_presenca(df_presenca, marcado):
+    for _, row in df_presenca.iterrows():
+        nome = normalizar_nome(row["NOME"])
+        if nome:
+            st.session_state[chave_checkbox_presenca(nome)] = marcado
+
+def aplicar_df_presenca_ao_estado(df_presenca):
+    for _, row in df_presenca.iterrows():
+        nome = normalizar_nome(row["NOME"])
+        if nome:
+            st.session_state[chave_checkbox_presenca(nome)] = str(row["PRESENCA"]).upper().strip() == "SIM"
+
+def construir_df_presenca_a_partir_dos_checkboxes(df_presenca_base):
+    linhas = []
+    for _, row in df_presenca_base.iterrows():
+        nome = normalizar_nome(row["NOME"])
+        if not nome:
+            continue
+
+        marcado = bool(st.session_state.get(chave_checkbox_presenca(nome), False))
+        linhas.append({
+            "NOME": nome,
+            "PRESENCA": "SIM" if marcado else "NÃO"
+        })
+
+    return pd.DataFrame(linhas, columns=COLUNAS_PRESENCA)
+
+def formatar_tempo_restante(segundos):
+    minutos = int(segundos // 60)
+    segundos_restantes = int(segundos % 60)
+    return f"{minutos:02d}:{segundos_restantes:02d}"
 
 def sortear_times(df_cadastro, df_presenca):
     cadastro_map = {}
@@ -289,6 +359,44 @@ def sortear_times(df_cadastro, df_presenca):
     df_sorteio = pd.DataFrame(linhas_sorteio, columns=COLUNAS_SORTEIO)
     return df_sorteio
 
+def realizar_sorteio(mapa_abas):
+    df_cadastro = ler_aba_com_cabecalho(mapa_abas, ABA_CADASTRO, COLUNAS_CADASTRO)
+    df_presenca = ler_aba_com_cabecalho(mapa_abas, ABA_PRESENCA, COLUNAS_PRESENCA)
+
+    df_cadastro["NOME"] = df_cadastro["NOME"].astype(str).str.strip()
+    df_presenca["NOME"] = df_presenca["NOME"].astype(str).str.strip()
+
+    df_cadastro = df_cadastro[df_cadastro["NOME"] != ""].reset_index(drop=True)
+    df_presenca = df_presenca[df_presenca["NOME"] != ""].reset_index(drop=True)
+
+    presentes_sim = df_presenca[
+        df_presenca["PRESENCA"].astype(str).str.upper().str.strip() == "SIM"
+    ]
+
+    if df_cadastro.empty:
+        st.error("Não há jogadores cadastrados.")
+        return
+
+    if df_presenca.empty:
+        st.error("A lista de presença está vazia.")
+        return
+
+    if presentes_sim.empty:
+        st.error("Nenhum jogador foi marcado como presente.")
+        return
+
+    df_sorteio = sortear_times(df_cadastro, df_presenca)
+    escrever_dataframe_na_aba(mapa_abas, ABA_SORTEIO, df_sorteio, COLUNAS_SORTEIO)
+
+    st.session_state.ultimo_sorteio_ts = time.time()
+    st.session_state.exigir_senha_master_sorteio = False
+    st.session_state.erro_senha_master_sorteio = ""
+    st.session_state.senha_master_sorteio_input = ""
+
+    limpar_cache_planilha()
+    st.success("Sorteio realizado com sucesso.")
+    st.rerun()
+
 # ==========================================================
 # ESTADO INICIAL
 # ==========================================================
@@ -300,6 +408,18 @@ if "admin_autenticado" not in st.session_state:
 
 if "admin_erro_login" not in st.session_state:
     st.session_state.admin_erro_login = ""
+
+if "ultimo_sorteio_ts" not in st.session_state:
+    st.session_state.ultimo_sorteio_ts = None
+
+if "exigir_senha_master_sorteio" not in st.session_state:
+    st.session_state.exigir_senha_master_sorteio = False
+
+if "erro_senha_master_sorteio" not in st.session_state:
+    st.session_state.erro_senha_master_sorteio = ""
+
+if "senha_master_sorteio_input" not in st.session_state:
+    st.session_state.senha_master_sorteio_input = ""
 
 # ==========================================================
 # SIDEBAR - LOGIN ADMIN
@@ -353,6 +473,9 @@ try:
 
     abas = st.tabs(["CADASTRO DE JOGADORES", "LISTA DE PRESENCA", "SORTEIO DOS TIMES"])
 
+    # ======================================================
+    # ABA 1 - CADASTRO
+    # ======================================================
     with abas[0]:
         st.subheader("Cadastro de jogadores")
 
@@ -381,10 +504,9 @@ try:
                 else:
                     nova_linha = montar_linha_cadastro(nome_jogador, categoria)
                     df_cadastro = pd.concat([df_cadastro, pd.DataFrame([nova_linha])], ignore_index=True)
-                    df_cadastro = df_cadastro.sort_values(by="NOME").reset_index(drop=True)
 
                     escrever_dataframe_na_aba(mapa_abas, ABA_CADASTRO, df_cadastro, COLUNAS_CADASTRO)
-                    sincronizar_lista_presenca(mapa_abas)
+                    sincronizar_lista_presenca(mapa_abas, forcar_gravacao=False)
 
                     limpar_cache_planilha()
                     st.success("Jogador cadastrado com sucesso.")
@@ -431,7 +553,7 @@ try:
                         df_cadastro.at[idx, col] = linha_atualizada[col]
 
                     escrever_dataframe_na_aba(mapa_abas, ABA_CADASTRO, df_cadastro, COLUNAS_CADASTRO)
-                    sincronizar_lista_presenca(mapa_abas)
+                    sincronizar_lista_presenca(mapa_abas, forcar_gravacao=False)
 
                     limpar_cache_planilha()
                     st.success("Categoria atualizada com sucesso.")
@@ -449,27 +571,36 @@ try:
                 if excluir:
                     df_cadastro = df_cadastro[df_cadastro["NOME"] != jogador_excluir].reset_index(drop=True)
                     escrever_dataframe_na_aba(mapa_abas, ABA_CADASTRO, df_cadastro, COLUNAS_CADASTRO)
-                    sincronizar_lista_presenca(mapa_abas)
+                    sincronizar_lista_presenca(mapa_abas, forcar_gravacao=False)
 
                     limpar_cache_planilha()
                     st.success("Jogador excluído com sucesso.")
                     st.rerun()
 
+    # ======================================================
+    # ABA 2 - PRESENÇA
+    # ======================================================
     with abas[1]:
         st.subheader("Lista de presença")
 
-        df_presenca = ler_aba_com_cabecalho(mapa_abas, ABA_PRESENCA, COLUNAS_PRESENCA)
+        # sincroniza automaticamente mantendo ordem de cadastro
+        df_presenca = sincronizar_lista_presenca(mapa_abas, forcar_gravacao=False)
         df_presenca["NOME"] = df_presenca["NOME"].astype(str).str.strip()
         df_presenca = df_presenca[df_presenca["NOME"] != ""].reset_index(drop=True)
+
+        inicializar_estado_checkboxes_presenca(df_presenca)
 
         if st.session_state.admin_autenticado:
             col1, col2, col3 = st.columns(3)
 
             with col1:
-                if st.button("Sincronizar nomes com cadastro", use_container_width=True):
-                    sincronizar_lista_presenca(mapa_abas)
+                if st.button("Salvar presença", use_container_width=True):
+                    novo_df_presenca = construir_df_presenca_a_partir_dos_checkboxes(df_presenca)
+                    escrever_dataframe_na_aba(mapa_abas, ABA_PRESENCA, novo_df_presenca, COLUNAS_PRESENCA)
+                    aplicar_df_presenca_ao_estado(novo_df_presenca)
+
                     limpar_cache_planilha()
-                    st.success("Lista de presença sincronizada com o cadastro.")
+                    st.success("Lista de presença salva com sucesso.")
                     st.rerun()
 
             with col2:
@@ -477,6 +608,7 @@ try:
                     if not df_presenca.empty:
                         df_presenca["PRESENCA"] = "SIM"
                         escrever_dataframe_na_aba(mapa_abas, ABA_PRESENCA, df_presenca, COLUNAS_PRESENCA)
+                        forcar_estado_checkboxes_presenca(df_presenca, True)
 
                     limpar_cache_planilha()
                     st.success("Todos os jogadores foram marcados como SIM.")
@@ -487,6 +619,7 @@ try:
                     if not df_presenca.empty:
                         df_presenca["PRESENCA"] = "NÃO"
                         escrever_dataframe_na_aba(mapa_abas, ABA_PRESENCA, df_presenca, COLUNAS_PRESENCA)
+                        forcar_estado_checkboxes_presenca(df_presenca, False)
 
                     limpar_cache_planilha()
                     st.success("Presenças zeradas com sucesso.")
@@ -495,28 +628,10 @@ try:
             if df_presenca.empty:
                 st.info("Nenhum jogador disponível na lista de presença. Cadastre jogadores na aba CADASTRO DE JOGADORES.")
             else:
-                with st.form("form_presenca"):
-                    novos_valores = []
-
-                    for i, row in df_presenca.iterrows():
-                        nome = row["NOME"]
-                        valor_atual = str(row["PRESENCA"]).upper().strip() == "SIM"
-
-                        marcado = st.checkbox(nome, value=valor_atual, key=f"presenca_{i}")
-                        novos_valores.append({
-                            "NOME": nome,
-                            "PRESENCA": "SIM" if marcado else "NÃO"
-                        })
-
-                    salvar_presenca = st.form_submit_button("Salvar presença")
-
-                if salvar_presenca:
-                    novo_df_presenca = pd.DataFrame(novos_valores, columns=COLUNAS_PRESENCA)
-                    escrever_dataframe_na_aba(mapa_abas, ABA_PRESENCA, novo_df_presenca, COLUNAS_PRESENCA)
-
-                    limpar_cache_planilha()
-                    st.success("Lista de presença salva com sucesso.")
-                    st.rerun()
+                st.markdown("### Marcação de presença")
+                for _, row in df_presenca.iterrows():
+                    nome = normalizar_nome(row["NOME"])
+                    st.checkbox(nome, key=chave_checkbox_presenca(nome))
         else:
             st.warning("Alterações de presença restritas ao administrador.")
 
@@ -526,6 +641,9 @@ try:
         else:
             st.dataframe(df_presenca, use_container_width=True, hide_index=True)
 
+    # ======================================================
+    # ABA 3 - SORTEIO
+    # ======================================================
     with abas[2]:
         st.subheader("Sorteio dos times")
 
@@ -534,32 +652,14 @@ try:
 
             with col1:
                 if st.button("Sortear times", use_container_width=True):
-                    df_cadastro = ler_aba_com_cabecalho(mapa_abas, ABA_CADASTRO, COLUNAS_CADASTRO)
-                    df_presenca = ler_aba_com_cabecalho(mapa_abas, ABA_PRESENCA, COLUNAS_PRESENCA)
+                    agora = time.time()
+                    ultimo_sorteio_ts = st.session_state.ultimo_sorteio_ts
 
-                    df_cadastro["NOME"] = df_cadastro["NOME"].astype(str).str.strip()
-                    df_presenca["NOME"] = df_presenca["NOME"].astype(str).str.strip()
-
-                    df_cadastro = df_cadastro[df_cadastro["NOME"] != ""].reset_index(drop=True)
-                    df_presenca = df_presenca[df_presenca["NOME"] != ""].reset_index(drop=True)
-
-                    presentes_sim = df_presenca[
-                        df_presenca["PRESENCA"].astype(str).str.upper().str.strip() == "SIM"
-                    ]
-
-                    if df_cadastro.empty:
-                        st.error("Não há jogadores cadastrados.")
-                    elif df_presenca.empty:
-                        st.error("A lista de presença está vazia.")
-                    elif presentes_sim.empty:
-                        st.error("Nenhum jogador foi marcado como presente.")
+                    if ultimo_sorteio_ts is None or (agora - ultimo_sorteio_ts) >= TEMPO_BLOQUEIO_SORTEIO_SEGUNDOS:
+                        realizar_sorteio(mapa_abas)
                     else:
-                        df_sorteio = sortear_times(df_cadastro, df_presenca)
-                        escrever_dataframe_na_aba(mapa_abas, ABA_SORTEIO, df_sorteio, COLUNAS_SORTEIO)
-
-                        limpar_cache_planilha()
-                        st.success("Sorteio realizado com sucesso.")
-                        st.rerun()
+                        st.session_state.exigir_senha_master_sorteio = True
+                        st.session_state.erro_senha_master_sorteio = ""
 
             with col2:
                 if st.button("Limpar sorteio", use_container_width=True):
@@ -569,6 +669,47 @@ try:
                     limpar_cache_planilha()
                     st.success("Sorteio limpo com sucesso.")
                     st.rerun()
+
+            if st.session_state.exigir_senha_master_sorteio:
+                agora = time.time()
+                ultimo_sorteio_ts = st.session_state.ultimo_sorteio_ts or 0
+                restante = max(0, TEMPO_BLOQUEIO_SORTEIO_SEGUNDOS - (agora - ultimo_sorteio_ts))
+
+                st.warning(
+                    f"Um novo sorteio só pode ser feito após 10 minutos. "
+                    f"Tempo restante: {formatar_tempo_restante(restante)}. "
+                    f"Digite a senha master para autorizar um novo sorteio agora."
+                )
+
+                with st.container(border=True):
+                    st.text_input(
+                        "Senha master para novo sorteio",
+                        type="password",
+                        key="senha_master_sorteio_input"
+                    )
+
+                    c1, c2 = st.columns(2)
+
+                    with c1:
+                        if st.button("Autorizar novo sorteio", use_container_width=True):
+                            if st.session_state.senha_master_sorteio_input == SENHA_MASTER_SORTEIO:
+                                st.session_state.exigir_senha_master_sorteio = False
+                                st.session_state.erro_senha_master_sorteio = ""
+                                st.session_state.senha_master_sorteio_input = ""
+                                realizar_sorteio(mapa_abas)
+                            else:
+                                st.session_state.erro_senha_master_sorteio = "Senha master inválida."
+
+                    with c2:
+                        if st.button("Cancelar autorização", use_container_width=True):
+                            st.session_state.exigir_senha_master_sorteio = False
+                            st.session_state.erro_senha_master_sorteio = ""
+                            st.session_state.senha_master_sorteio_input = ""
+                            st.rerun()
+
+                    if st.session_state.erro_senha_master_sorteio:
+                        st.error(st.session_state.erro_senha_master_sorteio)
+
         else:
             st.warning("Sortear e limpar sorteio são ações restritas ao administrador.")
 
