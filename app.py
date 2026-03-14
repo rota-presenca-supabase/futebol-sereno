@@ -1280,7 +1280,7 @@ try:
 
             if st.session_state.confirmar_sorteio_pendente:
                 with st.container(border=True):
-                    st.warning("TEM CERTEZA QUE DESEJA FAZER O SORTEIO?     CASO REALIZE O SORTEIO AGORA, SÓ SERÁ POSSÍVEL REALIZAR OUTRO SORTEIO SOMENTE DAQUI A 10 MINUTOS!     PENSE BEM!!!")
+                    st.warning("TEM CERTEZA QUE DESEJA FAZER O SORTEIO?     CASO REALIZE O SORTEIO AGORA, SÓ SERÁ POSSÍVEL REALIZAR OUTRO SORTEIO SOMENTE DAQUI A 10 MINUTOS!     PENSE BEM...")
 
                     c1, c2 = st.columns(2)
 
