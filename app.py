@@ -60,375 +60,256 @@ def aplicar_estilo_global():
     st.markdown(
         """
         <style>
-        :root {
-            --sereno-bg: #050505;
-            --sereno-card: rgba(18,18,18,0.92);
-            --sereno-card-2: rgba(22,22,22,0.95);
-            --sereno-borda: rgba(255,255,255,0.08);
-            --sereno-laranja: #ff6a00;
-            --sereno-laranja-2: #ff8c1a;
-            --sereno-texto: #f5f5f5;
-            --sereno-texto-2: #bdbdbd;
-            --sereno-danger: #b91c1c;
-            --sereno-success: #16a34a;
-        }
-
-        html, body, [class*="css"] {
-            font-family: "Arial", sans-serif;
-        }
-
-        .stApp {
-            background:
-                linear-gradient(rgba(0,0,0,0.80), rgba(0,0,0,0.88)),
-                url("https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=1600&q=80");
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            color: var(--sereno-texto);
-        }
-
         .block-container {
-            padding-top: 1.4rem;
+            padding-top: 3rem;
             padding-bottom: 2rem;
-            max-width: 1450px;
         }
 
-        section[data-testid="stSidebar"] {
-            background: linear-gradient(180deg, rgba(8,8,8,0.96), rgba(12,12,12,0.98));
-            border-right: 1px solid rgba(255,255,255,0.06);
-        }
-
-        section[data-testid="stSidebar"] .block-container {
-            padding-top: 1.2rem;
-            padding-bottom: 1.2rem;
-        }
-
-        [data-testid="stHeader"] {
-            background: rgba(0,0,0,0);
-        }
-
-        .sereno-hero {
-            background: linear-gradient(180deg, rgba(15,15,15,0.88), rgba(10,10,10,0.92));
-            border: 1px solid rgba(255,255,255,0.05);
-            border-top: 4px solid var(--sereno-laranja);
-            border-radius: 24px;
-            padding: 22px 28px;
-            margin-bottom: 18px;
-            box-shadow: 0 12px 32px rgba(0,0,0,0.28);
-        }
-
-        .sereno-hero h1 {
-            margin: 0;
-            color: #fff;
-            font-size: 3rem;
-            font-weight: 900;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
-
-        .sereno-hero p {
-            margin: 8px 0 0 0;
-            color: #d3d3d3;
-            font-size: 1.05rem;
-        }
-
-        .sereno-card {
-            background: linear-gradient(180deg, rgba(20,20,20,0.96), rgba(10,10,10,0.96));
-            border: 1px solid rgba(255,255,255,0.06);
-            border-top: 4px solid var(--sereno-laranja);
+        .sereno-topo {
+            background: linear-gradient(135deg, #fff8f2 0%, #ffffff 50%, #fff5eb 100%);
+            border: 1px solid #f0dfd0;
             border-radius: 22px;
-            padding: 20px;
-            box-shadow: 0 14px 32px rgba(0,0,0,0.26);
+            padding: 18px 22px;
             margin-bottom: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.05);
+            text-align: center;
         }
 
-        .sereno-card-header {
-            font-size: 1.8rem;
-            font-weight: 900;
-            color: #fff;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 4px;
+        .sereno-titulo {
+            font-size: 3.0rem !important;
+            font-weight: 900 !important;
+            color: #111827;
+            margin: 0;
+            line-height: 1.3;
         }
 
-        .sereno-card-sub {
-            font-size: 0.98rem;
-            color: #c4c4c4;
-            margin-bottom: 16px;
-        }
-
-        .sereno-section-title {
-            font-size: 1.45rem;
-            font-weight: 900;
-            color: #fff;
-            text-transform: uppercase;
-            margin-bottom: 14px;
-            letter-spacing: 1px;
-        }
-
-        .sereno-mini-title {
+        .sereno-subtitulo {
             font-size: 1rem;
-            font-weight: 800;
-            color: #f3f3f3;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 8px;
+            color: #6b7280;
+            margin-top: 8px;
+            margin-bottom: 0;
         }
 
-        div[data-testid="stForm"] {
-            background: rgba(12,12,12,0.72);
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 18px;
-            padding: 16px 16px 10px 16px;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
-        }
-
-        div[data-baseweb="input"] > div,
-        div[data-baseweb="select"] > div,
-        .stTextInput input,
-        .stTextArea textarea {
-            background: #050505 !important;
-            color: #ffffff !important;
-            border-radius: 14px !important;
-            border: 1px solid rgba(255,255,255,0.10) !important;
-        }
-
-        .stTextInput label p,
-        .stSelectbox label p,
-        .stTextArea label p {
-            color: #d7d7d7 !important;
-            font-weight: 700 !important;
-        }
-
-        div[data-baseweb="select"] svg,
-        div[data-baseweb="select"] span {
-            color: white !important;
-        }
-
-        .stTabs [data-baseweb="tab-list"] {
-            gap: 10px;
-            background: rgba(0,0,0,0.25);
-            padding: 8px;
-            border-radius: 16px;
-            border: 1px solid rgba(255,255,255,0.05);
-            margin-bottom: 18px;
-        }
-
-        .stTabs [data-baseweb="tab"] {
-            background: rgba(255,255,255,0.04);
-            border-radius: 12px;
-            color: #d6d6d6;
-            height: 48px;
-            padding: 0 18px;
-        }
-
-        .stTabs [aria-selected="true"] {
-            background: linear-gradient(180deg, #ff7a12, #ff6a00) !important;
-            color: #fff !important;
-            box-shadow: 0 8px 18px rgba(255,106,0,0.28);
-        }
-
-        .stTabs button p {
-            font-size: 1rem !important;
-            font-weight: 800 !important;
-            letter-spacing: 0.5px;
-        }
-
-        .stButton > button,
-        .stDownloadButton > button,
-        .stLinkButton a {
-            border-radius: 14px !important;
-            border: 1px solid rgba(255,255,255,0.08) !important;
-            font-weight: 800 !important;
-            min-height: 46px !important;
-            color: white !important;
-            background: linear-gradient(180deg, #ff7a12, #ff6a00) !important;
-            box-shadow: 0 10px 18px rgba(255,106,0,0.18);
-        }
-
-        .stButton > button:hover,
-        .stDownloadButton > button:hover,
-        .stLinkButton a:hover {
-            filter: brightness(1.06);
-            border-color: rgba(255,255,255,0.16) !important;
-        }
-
-        .sereno-btn-neutral button {
-            background: linear-gradient(180deg, #2e2e2e, #1f1f1f) !important;
-            box-shadow: none !important;
-        }
-
-        .sereno-btn-danger button {
-            background: linear-gradient(180deg, #7f1d1d, #450a0a) !important;
-            box-shadow: none !important;
-        }
-
-        .sereno-muted {
-            color: #b7b7b7;
-        }
-
-        .sereno-badge {
-            display: inline-block;
-            padding: 5px 12px;
-            border-radius: 10px;
-            font-size: 0.85rem;
-            font-weight: 900;
-            letter-spacing: 0.4px;
-            color: #ff9a3c;
-            background: rgba(255,106,0,0.10);
-            border: 1px solid rgba(255,106,0,0.35);
-            text-transform: uppercase;
-        }
-
-        .sereno-player-row {
-            background: rgba(7,7,7,0.72);
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 16px;
-            padding: 10px 14px;
-            margin-bottom: 10px;
-        }
-
-        .sereno-player-name {
-            color: #ffffff;
-            font-weight: 900;
-            font-size: 1.08rem;
-            margin-bottom: 2px;
-        }
-
-        .sereno-player-meta {
-            color: #c7c7c7;
-            font-size: 0.92rem;
-            text-transform: uppercase;
-        }
-
-        .sereno-presenca-card {
-            background: rgba(35, 16, 0, 0.55);
-            border: 2px solid rgba(255,106,0,0.72);
-            border-radius: 18px;
-            padding: 8px 14px 2px 14px;
-            margin-bottom: 12px;
-        }
-
-        div[data-testid="stCheckbox"] {
-            background: rgba(0,0,0,0.18);
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 14px;
-            padding: 8px 10px;
-            margin-bottom: 8px;
-        }
-
-        div[data-testid="stCheckbox"] label p {
-            color: #fff !important;
-            font-size: 1.18rem !important;
-            font-weight: 800 !important;
-        }
-
-        .sereno-table-wrap {
+        .sereno-tabela-wrapper {
             overflow-x: auto;
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 18px;
-            background: rgba(10,10,10,0.82);
+            width: 100%;
+            border: 1px solid #ececec;
+            border-radius: 16px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.04);
+            background: #fff;
         }
 
         table.sereno-table {
             width: 100%;
+            min-width: 100%;
             border-collapse: collapse;
-            min-width: 780px;
+            font-size: 0.85rem;
+            table-layout: auto;
         }
 
         table.sereno-table thead th {
-            background: #050505;
-            color: #d9d9d9;
-            text-align: left;
-            padding: 14px 16px;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            border-bottom: 1px solid rgba(255,255,255,0.08);
+            background: #111827;
+            color: #ffffff;
+            text-align: center;
+            padding: 12px 14px;
+            font-weight: 700;
+            border-bottom: 1px solid #111827;
+            white-space: nowrap;
         }
 
         table.sereno-table tbody td {
-            padding: 14px 16px;
-            color: #f4f4f4;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding: 11px 14px;
+            border-bottom: 1px solid #efefef;
+            white-space: normal;
+            word-break: break-word;
+        }
+
+        table.sereno-table tbody tr:nth-child(odd) {
+            background: #fafafa;
+        }
+
+        table.sereno-table tbody tr:nth-child(even) {
+            background: #ffffff;
         }
 
         table.sereno-table tbody tr:hover {
-            background: rgba(255,106,0,0.06);
+            background: #fff4e8;
         }
 
         .sereno-centralizado {
             text-align: center !important;
         }
 
-        .sereno-empty {
-            text-align: center;
-            color: #a5a5a5;
-            font-size: 1.1rem;
-            padding: 60px 20px;
+        .sereno-secao-titulo {
+            font-size: 1.12rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #111827;
         }
 
-        .sereno-side-logo {
-            text-align: center;
-            padding-bottom: 14px;
-            border-bottom: 1px solid rgba(255,255,255,0.06);
+        .sereno-card-presenca {
+            background: linear-gradient(180deg, #fffaf5 0%, #ffffff 100%);
+            border: 2px solid #f59e0b;
+            border-radius: 18px;
+            padding: 16px 18px 10px 18px;
+            box-shadow: 0 8px 18px rgba(245, 158, 11, 0.10);
             margin-bottom: 14px;
         }
 
-        .sereno-side-logo h2 {
-            color: #fff;
-            margin: 12px 0 4px 0;
-            font-size: 2rem;
-            font-weight: 900;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-        }
-
-        .sereno-side-logo p {
-            color: #ff8f2a;
-            margin: 0;
-            font-weight: 700;
-        }
-
-        .sereno-admin-box {
-            background: rgba(43, 22, 0, 0.85);
-            border: 1px solid rgba(255,106,0,0.35);
-            border-radius: 16px;
-            padding: 12px 14px;
-            color: white;
-        }
-
-        .sereno-admin-box small {
-            color: #cfcfcf;
-            display: block;
-            margin-bottom: 3px;
-        }
-
-        .sereno-confirm-box {
-            background: rgba(45,20,0,0.82);
-            border: 1px solid rgba(255,106,0,0.35);
+        div[data-testid="stForm"] {
+            background: #ffffff;
+            border: 1px solid #ececec;
             border-radius: 18px;
-            padding: 16px;
-            margin-top: 12px;
+            padding: 14px 14px 8px 14px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.04);
         }
 
-        .sereno-confirm-box .titulo {
-            color: #fff;
-            font-size: 1.05rem;
-            font-weight: 800;
-            margin-bottom: 10px;
+        div[data-testid="stSidebar"] div[data-testid="stForm"] .stTextInput div[data-baseweb="input"] {
+            background-color: #ffffff !important;
+            border: 2px solid #d1d5db !important;
+            border-radius: 12px !important;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05) !important;
+            transition: border-color 0.2s, box-shadow 0.2s;
         }
 
-        .sereno-foot {
-            text-align: center;
-            color: #bfbfbf;
-            margin-top: 18px;
-            font-size: 0.95rem;
-            font-weight: 700;
+        div[data-testid="stSidebar"] div[data-testid="stForm"] .stTextInput div[data-baseweb="input"]:focus-within {
+            border-color: #3b82f6 !important;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05), 0 0 0 3px rgba(59, 130, 246, 0.2) !important;
         }
 
-        div[data-testid="stAlert"] {
-            border-radius: 16px !important;
+        div.stButton > button {
+            border-radius: 12px !important;
+            font-weight: 700 !important;
+        }
+
+        div[data-baseweb="select"] > div {
+            border-radius: 12px !important;
+        }
+
+        .stTabs [data-baseweb="tab-list"] {
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .stTabs [data-baseweb="tab"] {
+            height: 44px;
+            border-radius: 12px 12px 0 0;
+        }
+
+        button[data-baseweb="tab"] p,
+        div[data-testid="stTabs"] button p {
+            font-size: 1.15rem !important;
+        }
+
+        div[data-testid="stCheckbox"] {
+            padding: 10px 12px;
+            border-radius: 12px;
+            border: 1px solid #efefef;
+            margin-bottom: 6px;
+            background: #ffffff;
+        }
+
+        div[data-testid="stCheckbox"]:nth-of-type(odd) {
+            background: #fff8f1;
+        }
+
+        div[data-testid="stCheckbox"]:nth-of-type(even) {
+            background: #ffffff;
+        }
+
+        div[data-testid="stCheckbox"] label p {
+            font-weight: 700 !important;
+            font-size: 1.2rem !important;
+        }
+
+        div.element-container:has(#btn-salvar-presenca),
+        div.element-container:has(#btn-marcar-sim),
+        div.element-container:has(#btn-marcar-nao),
+        div.element-container:has(#btn-atualizar-dados),
+        div.element-container:has(#btn-sortear),
+        div.element-container:has(#btn-limpar),
+        div.element-container:has(#btn-atualizar-presenca),
+        div.element-container:has(#btn-salvar-jogador),
+        div.element-container:has(#btn-atualizar-jogador),
+        div.element-container:has(#btn-excluir-jogador),
+        div.element-container:has(#btn-confirmar-exclusao),
+        div.element-container:has(#btn-cancelar-exclusao),
+        div.element-container:has(#btn-autorizar-senha),
+        div.element-container:has(#btn-cancelar-senha),
+        div.element-container:has(#btn-whatsapp),
+        div.element-container:has(#btn-confirmar-sorteio),
+        div.element-container:has(#btn-cancelar-sorteio) {
+            display: none !important;
+        }
+
+        /* Cores Cirúrgicas para aba Presença */
+        div.element-container:has(#btn-atualizar-presenca) + div.element-container div.stButton > button {
+            background-color: #f3f4f6 !important; border-color: #e5e7eb !important; color: #1f2937 !important;
+        }
+        div.element-container:has(#btn-salvar-presenca) + div.element-container div.stButton > button {
+            background-color: #d1fae5 !important; border-color: #a7f3d0 !important; color: #065f46 !important;
+        }
+        div.element-container:has(#btn-marcar-sim) + div.element-container div.stButton > button {
+            background-color: #dbeafe !important; border-color: #bfdbfe !important; color: #1e40af !important;
+        }
+        div.element-container:has(#btn-marcar-nao) + div.element-container div.stButton > button {
+            background-color: #fee2e2 !important; border-color: #fecaca !important; color: #991b1b !important;
+        }
+
+        /* Cores Cirúrgicas para aba Sorteio */
+        div.element-container:has(#btn-atualizar-dados) + div.element-container div.stButton > button {
+            background-color: #f3f4f6 !important; border-color: #e5e7eb !important; color: #1f2937 !important;
+        }
+        div.element-container:has(#btn-sortear) + div.element-container div.stButton > button {
+            background-color: #fef08a !important; border-color: #fde047 !important; color: #854d0e !important;
+        }
+        div.element-container:has(#btn-limpar) + div.element-container div.stButton > button {
+            background-color: #ffedd5 !important; border-color: #fed7aa !important; color: #9a3412 !important;
+        }
+
+        /* Cores Cirúrgicas para aba Cadastro */
+        div.element-container:has(#btn-salvar-jogador) + div.element-container button {
+            background-color: #d1fae5 !important; border-color: #a7f3d0 !important; color: #065f46 !important;
+        }
+        div.element-container:has(#btn-atualizar-jogador) + div.element-container button {
+            background-color: #dbeafe !important; border-color: #bfdbfe !important; color: #1e40af !important;
+        }
+        div.element-container:has(#btn-excluir-jogador) + div.element-container button {
+            background-color: #fee2e2 !important; border-color: #fecaca !important; color: #991b1b !important;
+        }
+        div.element-container:has(#btn-confirmar-exclusao) + div.element-container button {
+            background-color: #fee2e2 !important; border-color: #fecaca !important; color: #991b1b !important;
+        }
+        div.element-container:has(#btn-cancelar-exclusao) + div.element-container button {
+            background-color: #f3f4f6 !important; border-color: #e5e7eb !important; color: #1f2937 !important;
+        }
+
+        /* Cores Cirúrgicas para confirmação do sorteio */
+        div.element-container:has(#btn-confirmar-sorteio) + div.element-container button {
+            background-color: #fef08a !important; border-color: #fde047 !important; color: #854d0e !important;
+        }
+        div.element-container:has(#btn-cancelar-sorteio) + div.element-container button {
+            background-color: #f3f4f6 !important; border-color: #e5e7eb !important; color: #1f2937 !important;
+        }
+
+        /* Cores Cirúrgicas para a Senha Master */
+        div.element-container:has(#btn-autorizar-senha) + div.element-container button {
+            background-color: #d1fae5 !important; border-color: #a7f3d0 !important; color: #065f46 !important;
+        }
+        div.element-container:has(#btn-cancelar-senha) + div.element-container button {
+            background-color: #f3f4f6 !important; border-color: #e5e7eb !important; color: #1f2937 !important;
+        }
+
+        /* Cor Oficial do WhatsApp para o botão de link */
+        div.element-container:has(#btn-whatsapp) + div.element-container a {
+            background-color: #25D366 !important;
+            border-color: #128C7E !important;
+            color: #ffffff !important;
+            border-radius: 12px !important;
+        }
+        div.element-container:has(#btn-whatsapp) + div.element-container a p {
+            color: #ffffff !important;
+            font-weight: 800 !important;
         }
         </style>
         """,
@@ -438,23 +319,11 @@ def aplicar_estilo_global():
 def formatar_opcao_vazia(texto):
     return "Selecione..." if texto == "" else texto
 
-def card_titulo(titulo, subtitulo=""):
-    st.markdown(
-        f"""
-        <div class="sereno-card">
-            <div class="sereno-card-header">{titulo}</div>
-            {'<div class="sereno-card-sub">' + subtitulo + '</div>' if subtitulo else ''}
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-def render_table_html(df, centralizar_colunas=None, badge_colunas=None):
+def render_table_html(df, centralizar_colunas=None):
     if df.empty:
-        return "<div class='sereno-table-wrap'><div class='sereno-empty'>Sem dados.</div></div>"
+        return "<div class='sereno-tabela-wrapper'><table class='sereno-table'><tbody><tr><td>Sem dados.</td></tr></tbody></table></div>"
 
     centralizar_colunas = centralizar_colunas or []
-    badge_colunas = badge_colunas or []
 
     colunas_html = ""
     for col in df.columns:
@@ -468,9 +337,9 @@ def render_table_html(df, centralizar_colunas=None, badge_colunas=None):
         is_reserva = False
         if "Ordem" in df.columns:
             try:
-                if int(str(row["Ordem"]).strip()) >= 12:
+                if int(row["Ordem"]) >= 12:
                     is_reserva = True
-            except Exception:
+            except ValueError:
                 pass
 
         for col in df.columns:
@@ -478,17 +347,14 @@ def render_table_html(df, centralizar_colunas=None, badge_colunas=None):
             valor = "" if pd.isna(valor) else str(valor)
             classe = "sereno-centralizado" if col in centralizar_colunas else ""
 
-            if col in badge_colunas and valor.strip():
-                valor = f"<span class='sereno-badge'>{valor}</span>"
-
-            if is_reserva and col in ["Time A", "Time B"] and valor.strip():
-                valor = f"<span style='color:#ff6a6a;font-weight:900;'>{valor}</span>"
+            if is_reserva and col in ["Time A", "Time B"] and str(valor).strip() != "":
+                valor = f"<span style='color: #dc2626; font-weight: bold;'>{valor}</span>"
 
             linhas_html += f"<td class='{classe}'>{valor}</td>"
         linhas_html += "</tr>"
 
     return f"""
-    <div class="sereno-table-wrap">
+    <div class="sereno-tabela-wrapper">
         <table class="sereno-table">
             <thead>
                 <tr>{colunas_html}</tr>
@@ -500,11 +366,8 @@ def render_table_html(df, centralizar_colunas=None, badge_colunas=None):
     </div>
     """
 
-def exibir_tabela_html(df, centralizar_colunas=None, badge_colunas=None):
-    st.markdown(
-        render_table_html(df, centralizar_colunas=centralizar_colunas, badge_colunas=badge_colunas),
-        unsafe_allow_html=True
-    )
+def exibir_tabela_html(df, centralizar_colunas=None):
+    st.markdown(render_table_html(df, centralizar_colunas), unsafe_allow_html=True)
 
 # ==========================================================
 # UTILITÁRIOS DE RESILIÊNCIA
@@ -1042,35 +905,6 @@ def realizar_sorteio(mapa_abas):
     st.rerun()
 
 # ==========================================================
-# FUNÇÕES DE UI CADASTRO
-# ==========================================================
-def preparar_edicao_jogador(df_cadastro, nome_jogador):
-    alvo = df_cadastro[df_cadastro["NOME"] == nome_jogador]
-    if alvo.empty:
-        st.error("Jogador não encontrado para edição.")
-        return
-
-    linha = alvo.iloc[0].to_dict()
-    categoria = descobrir_categoria_jogador(linha)
-    posicao = normalizar_posicao(linha.get("POSICAO", ""))
-
-    st.session_state.modo_cadastro = "editar"
-    st.session_state.jogador_editando_original = nome_jogador
-    st.session_state.form_nome_jogador = nome_jogador
-    st.session_state.form_categoria_jogador = categoria
-    st.session_state.form_posicao_jogador = posicao
-
-def resetar_form_cadastro():
-    st.session_state.modo_cadastro = "novo"
-    st.session_state.jogador_editando_original = ""
-    st.session_state.form_nome_jogador = ""
-    st.session_state.form_categoria_jogador = ""
-    st.session_state.form_posicao_jogador = ""
-
-def categoria_e_posicao_do_jogador(row):
-    return descobrir_categoria_jogador(row.to_dict()), normalizar_posicao(row.get("POSICAO", ""))
-
-# ==========================================================
 # ESTADO INICIAL
 # ==========================================================
 if "abas_inicializadas" not in st.session_state:
@@ -1100,45 +934,22 @@ if "forcar_atualizacao_presenca" not in st.session_state:
 if "confirmar_sorteio_pendente" not in st.session_state:
     st.session_state.confirmar_sorteio_pendente = False
 
-if "modo_cadastro" not in st.session_state:
-    st.session_state.modo_cadastro = "novo"
-
-if "jogador_editando_original" not in st.session_state:
-    st.session_state.jogador_editando_original = ""
-
-if "form_nome_jogador" not in st.session_state:
-    st.session_state.form_nome_jogador = ""
-
-if "form_categoria_jogador" not in st.session_state:
-    st.session_state.form_categoria_jogador = ""
-
-if "form_posicao_jogador" not in st.session_state:
-    st.session_state.form_posicao_jogador = ""
-
 # ==========================================================
 # ESTILO
 # ==========================================================
 aplicar_estilo_global()
 
 # ==========================================================
-# SIDEBAR
+# SIDEBAR - LOGIN ADMIN
 # ==========================================================
 with st.sidebar:
-    logo_path = Path("SERENO FC.png")
-    st.markdown('<div class="sereno-side-logo">', unsafe_allow_html=True)
-    if logo_path.exists():
-        st.image(str(logo_path), width=120)
-    st.markdown("<h2>SERENO FC</h2>", unsafe_allow_html=True)
-    st.markdown("<p>Desde 1966</p>", unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
-
-    st.markdown("### Acesso Admin")
+    st.header("ACESSO AO SISTEMA SERENO")
 
     if not st.session_state.admin_autenticado:
         with st.form("form_login_admin", clear_on_submit=True):
-            usuario_admin = st.text_input("Usuário", placeholder="Usuário...")
-            senha_admin = st.text_input("Senha", type="password", placeholder="Senha...")
-            entrar_admin = st.form_submit_button("ENTRAR", use_container_width=True)
+            usuario_admin = st.text_input("Usuário", placeholder="Digite o usuário...")
+            senha_admin = st.text_input("Senha", type="password", placeholder="Digite a senha...")
+            entrar_admin = st.form_submit_button("Entrar")
 
         if entrar_admin:
             if usuario_admin == ADMIN_USUARIO and senha_admin == ADMIN_SENHA:
@@ -1147,37 +958,31 @@ with st.sidebar:
                 st.session_state.forcar_atualizacao_presenca = True
                 st.rerun()
             else:
-                st.session_state.admin_erro_login = "Usuário ou senha inválidos."
+                st.session_state.admin_erro_login = "Usuário ou Senha inválidos!"
 
         if st.session_state.admin_erro_login:
             st.error(st.session_state.admin_erro_login)
+
+        st.info("Faça Login para acessar os dados!")
     else:
-        st.markdown(
-            """
-            <div class="sereno-admin-box">
-                <small>Autenticado como</small>
-                <div style="font-size:1.25rem;font-weight:900;">ADMIN</div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-        st.write("")
-        st.markdown('<div class="sereno-btn-danger">', unsafe_allow_html=True)
-        if st.button("SAIR", use_container_width=True):
+        st.success("Login Autenticado.")
+        st.write(f"Usuário: {ADMIN_USUARIO}")
+
+        if st.button("Sair", use_container_width=True):
             st.session_state.admin_autenticado = False
             st.session_state.admin_erro_login = ""
-            resetar_form_cadastro()
             st.rerun()
-        st.markdown("</div>", unsafe_allow_html=True)
 
 # ==========================================================
 # TOPO
 # ==========================================================
 st.markdown(
     """
-    <div class="sereno-hero">
-        <h1>Sereno F.C.</h1>
-        <p>Sistema de cadastro, presença e sorteio de times</p>
+    <div class="sereno-topo">
+        <p class="sereno-titulo">Sereno F.C.</p>
+        <p class="sereno-subtitulo">
+            Sistema de cadastro, presença e sorteio de times
+        </p>
     </div>
     """,
     unsafe_allow_html=True
@@ -1194,9 +999,9 @@ try:
         st.session_state.abas_inicializadas = True
 
     abas = st.tabs([
-        "CADASTRO",
-        "JOGADORES",
-        "PRESENÇA",
+        "CADASTRO        ",
+        "JOGADORES        ",
+        "PRESENÇA        ",
         "SORTEIO"
     ])
 
@@ -1204,238 +1009,159 @@ try:
     # ABA 1 - CADASTRO
     # ======================================================
     with abas[0]:
-        st.markdown(
-            """
-            <div class="sereno-card">
-                <div class="sereno-card-header">Cadastro</div>
-                <div class="sereno-card-sub">Gerenciar os jogadores do Sereno FC</div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
         df_cadastro = ler_aba_com_cabecalho(mapa_abas, ABA_CADASTRO, COLUNAS_CADASTRO)
         df_cadastro["NOME"] = df_cadastro["NOME"].astype(str).str.strip()
         df_cadastro["POSICAO"] = df_cadastro["POSICAO"].astype(str).str.strip()
         df_cadastro = df_cadastro[df_cadastro["NOME"] != ""].reset_index(drop=True)
 
         if st.session_state.admin_autenticado:
-            col_esq, col_dir = st.columns([1.05, 1.55], gap="large")
+            st.markdown("### Adicionar jogador")
 
-            with col_esq:
-                titulo_form = "Novo Jogador" if st.session_state.modo_cadastro == "novo" else "Editar Jogador"
-                subtitulo_form = (
-                    "Cadastre um novo jogador no elenco."
-                    if st.session_state.modo_cadastro == "novo"
-                    else f"Editando: {st.session_state.jogador_editando_original}"
+            with st.form("form_cadastro", clear_on_submit=True):
+                nome_jogador = st.text_input("Nome do jogador")
+
+                posicao = st.selectbox(
+                    "Posição",
+                    [""] + OPCOES_POSICAO,
+                    format_func=formatar_opcao_vazia
                 )
 
-                st.markdown(
-                    f"""
-                    <div class="sereno-card">
-                        <div class="sereno-section-title">{titulo_form}</div>
-                        <div class="sereno-card-sub">{subtitulo_form}</div>
-                    """,
-                    unsafe_allow_html=True
+                categoria = st.selectbox(
+                    "Categoria",
+                    [""] + OPCOES_CATEGORIA,
+                    format_func=formatar_opcao_vazia
                 )
 
-                with st.form("form_cadastro_unificado", clear_on_submit=False):
-                    nome_padrao = st.session_state.form_nome_jogador
-                    categoria_padrao = st.session_state.form_categoria_jogador
-                    posicao_padrao = st.session_state.form_posicao_jogador
+                st.markdown('<div id="btn-salvar-jogador" style="display:none;"></div>', unsafe_allow_html=True)
+                enviar_cadastro = st.form_submit_button("Salvar jogador")
 
-                    nome_jogador = st.text_input(
-                        "Nome completo",
-                        value=nome_padrao,
-                        placeholder="Ex: Neymar Jr"
-                    )
+            if enviar_cadastro:
+                nome_jogador = normalizar_nome(nome_jogador)
+                posicao = normalizar_posicao(posicao)
+                categoria = normalizar_categoria(categoria)
 
-                    idx_categoria = 0
-                    if categoria_padrao in OPCOES_CATEGORIA:
-                        idx_categoria = OPCOES_CATEGORIA.index(categoria_padrao) + 1
+                if not nome_jogador:
+                    st.error("Informe o nome do jogador.")
+                elif not posicao:
+                    st.error("Selecione a posição.")
+                elif not categoria:
+                    st.error("Selecione a categoria.")
+                elif nome_jogador.upper() in [x.upper() for x in df_cadastro["NOME"].tolist()]:
+                    st.error("Esse jogador já está cadastrado.")
+                else:
+                    nova_linha = montar_linha_cadastro(nome_jogador, categoria, posicao)
+                    df_cadastro = pd.concat([df_cadastro, pd.DataFrame([nova_linha])], ignore_index=True)
 
-                    categoria = st.selectbox(
-                        "Categoria",
-                        [""] + OPCOES_CATEGORIA,
-                        index=idx_categoria,
-                        format_func=formatar_opcao_vazia
-                    )
+                    escrever_dataframe_na_aba(mapa_abas, ABA_CADASTRO, df_cadastro, COLUNAS_CADASTRO)
+                    sincronizar_lista_presenca(mapa_abas, forcar_gravacao=False)
 
-                    idx_posicao = 0
-                    if posicao_padrao in OPCOES_POSICAO:
-                        idx_posicao = OPCOES_POSICAO.index(posicao_padrao) + 1
-
-                    posicao = st.selectbox(
-                        "Posição",
-                        [""] + OPCOES_POSICAO,
-                        index=idx_posicao,
-                        format_func=formatar_opcao_vazia
-                    )
-
-                    c_form1, c_form2 = st.columns(2)
-                    with c_form1:
-                        acao_label = "CADASTRAR" if st.session_state.modo_cadastro == "novo" else "ATUALIZAR"
-                        enviar_cadastro = st.form_submit_button(acao_label, use_container_width=True)
-                    with c_form2:
-                        cancelar_edicao = st.form_submit_button("CANCELAR", use_container_width=True)
-
-                if cancelar_edicao:
-                    resetar_form_cadastro()
+                    st.success("Jogador cadastrado com sucesso.")
                     st.rerun()
 
-                if enviar_cadastro:
-                    nome_jogador = normalizar_nome(nome_jogador)
-                    posicao = normalizar_posicao(posicao)
-                    categoria = normalizar_categoria(categoria)
+            st.markdown("### Atualizar jogador")
+            nomes_existentes = [""] + df_cadastro["NOME"].tolist()
 
-                    if not nome_jogador:
-                        st.error("Informe o nome do jogador.")
-                    elif not categoria:
-                        st.error("Selecione a categoria.")
-                    elif not posicao:
-                        st.error("Selecione a posição.")
-                    else:
-                        nomes_existentes_upper = [x.upper() for x in df_cadastro["NOME"].tolist()]
-
-                        if st.session_state.modo_cadastro == "novo":
-                            if nome_jogador.upper() in nomes_existentes_upper:
-                                st.error("Esse jogador já está cadastrado.")
-                            else:
-                                nova_linha = montar_linha_cadastro(nome_jogador, categoria, posicao)
-                                df_cadastro = pd.concat([df_cadastro, pd.DataFrame([nova_linha])], ignore_index=True)
-
-                                escrever_dataframe_na_aba(mapa_abas, ABA_CADASTRO, df_cadastro, COLUNAS_CADASTRO)
-                                sincronizar_lista_presenca(mapa_abas, forcar_gravacao=False)
-                                resetar_form_cadastro()
-
-                                st.success("Jogador cadastrado com sucesso.")
-                                st.rerun()
-                        else:
-                            nome_original = st.session_state.jogador_editando_original
-
-                            conflito = (
-                                nome_jogador.upper() in nomes_existentes_upper and
-                                nome_jogador.upper() != nome_original.upper()
-                            )
-
-                            if conflito:
-                                st.error("Já existe outro jogador com esse nome.")
-                            else:
-                                idx = df_cadastro.index[df_cadastro["NOME"] == nome_original]
-                                if len(idx) == 0:
-                                    st.error("Jogador não encontrado para atualização.")
-                                else:
-                                    idx = idx[0]
-                                    linha_atualizada = montar_linha_cadastro(nome_jogador, categoria, posicao)
-                                    for col in COLUNAS_CADASTRO:
-                                        df_cadastro.at[idx, col] = linha_atualizada[col]
-
-                                    escrever_dataframe_na_aba(mapa_abas, ABA_CADASTRO, df_cadastro, COLUNAS_CADASTRO)
-                                    sincronizar_lista_presenca(mapa_abas, forcar_gravacao=False)
-                                    resetar_form_cadastro()
-
-                                    st.success("Jogador atualizado com sucesso.")
-                                    st.rerun()
-
-                st.markdown("</div>", unsafe_allow_html=True)
-
-            with col_dir:
-                st.markdown(
-                    """
-                    <div class="sereno-card">
-                        <div class="sereno-section-title">Jogadores Cadastrados</div>
-                    """,
-                    unsafe_allow_html=True
+            with st.form("form_editar", clear_on_submit=True):
+                jogador_editar = st.selectbox(
+                    "Selecione o jogador",
+                    nomes_existentes,
+                    format_func=formatar_opcao_vazia
                 )
 
-                if df_cadastro.empty:
-                    st.info("Nenhum jogador cadastrado ainda.")
+                posicao_editar = st.selectbox(
+                    "Nova posição",
+                    [""] + OPCOES_POSICAO,
+                    format_func=formatar_opcao_vazia
+                )
+
+                categoria_editar = st.selectbox(
+                    "Nova categoria",
+                    [""] + OPCOES_CATEGORIA,
+                    format_func=formatar_opcao_vazia
+                )
+
+                st.markdown('<div id="btn-atualizar-jogador" style="display:none;"></div>', unsafe_allow_html=True)
+                salvar_edicao = st.form_submit_button("Atualizar jogador")
+
+            if salvar_edicao:
+                if not jogador_editar:
+                    st.error("Selecione o jogador.")
+                elif not posicao_editar:
+                    st.error("Selecione a nova posição.")
+                elif not categoria_editar:
+                    st.error("Selecione a nova categoria.")
                 else:
-                    for i, row in df_cadastro.iterrows():
-                        nome = normalizar_nome(row["NOME"])
-                        categoria, posicao = categoria_e_posicao_do_jogador(row)
-
-                        linha1, linha2, linha3 = st.columns([6.5, 0.8, 0.8], gap="small")
-
-                        with linha1:
-                            st.markdown(
-                                f"""
-                                <div class="sereno-player-row">
-                                    <div class="sereno-player-name">{nome}</div>
-                                    <div class="sereno-player-meta">
-                                        <span class="sereno-badge">{categoria}</span>
-                                        &nbsp;&nbsp; {posicao}
-                                    </div>
-                                </div>
-                                """,
-                                unsafe_allow_html=True
-                            )
-
-                        with linha2:
-                            if st.button("✏️", key=f"editar_jogador_{i}", help=f"Editar {nome}", use_container_width=True):
-                                preparar_edicao_jogador(df_cadastro, nome)
-                                st.rerun()
-
-                        with linha3:
-                            if st.button("🗑️", key=f"excluir_jogador_{i}", help=f"Excluir {nome}", use_container_width=True):
-                                st.session_state.pendente_excluir_jogador = nome
-                                st.rerun()
-
-                if st.session_state.pendente_excluir_jogador:
-                    st.markdown(
-                        f"""
-                        <div class="sereno-confirm-box">
-                            <div class="titulo">Deseja realmente excluir o jogador '{st.session_state.pendente_excluir_jogador}'?</div>
-                        </div>
-                        """,
-                        unsafe_allow_html=True
+                    idx = df_cadastro.index[df_cadastro["NOME"] == jogador_editar][0]
+                    linha_atualizada = montar_linha_cadastro(
+                        jogador_editar,
+                        normalizar_categoria(categoria_editar),
+                        normalizar_posicao(posicao_editar)
                     )
+                    for col in COLUNAS_CADASTRO:
+                        df_cadastro.at[idx, col] = linha_atualizada[col]
+
+                    escrever_dataframe_na_aba(mapa_abas, ABA_CADASTRO, df_cadastro, COLUNAS_CADASTRO)
+                    sincronizar_lista_presenca(mapa_abas, forcar_gravacao=False)
+
+                    st.success("Jogador atualizado com sucesso.")
+                    st.rerun()
+
+            st.markdown("### Excluir jogador")
+            with st.form("form_excluir", clear_on_submit=True):
+                jogador_excluir = st.selectbox(
+                    "Selecione o jogador para excluir",
+                    nomes_existentes,
+                    format_func=formatar_opcao_vazia,
+                    key="excluir_jogador"
+                )
+
+                st.markdown('<div id="btn-excluir-jogador" style="display:none;"></div>', unsafe_allow_html=True)
+                excluir = st.form_submit_button("Excluir jogador")
+
+            if excluir:
+                if not jogador_excluir:
+                    st.error("Selecione o jogador para excluir.")
+                else:
+                    st.session_state.pendente_excluir_jogador = jogador_excluir
+                    st.rerun()
+
+            if st.session_state.pendente_excluir_jogador:
+                with st.container(border=True):
+                    st.warning(
+                        f"Deseja realmente excluir o jogador "
+                        f"'{st.session_state.pendente_excluir_jogador}'?"
+                    )
+
                     c1, c2 = st.columns(2)
+
                     with c1:
-                        if st.button("CONFIRMAR EXCLUSÃO", use_container_width=True):
+                        st.markdown('<div id="btn-confirmar-exclusao" style="display:none;"></div>', unsafe_allow_html=True)
+                        if st.button("Confirmar exclusão", use_container_width=True):
                             jogador_alvo = st.session_state.pendente_excluir_jogador
                             df_cadastro = df_cadastro[df_cadastro["NOME"] != jogador_alvo].reset_index(drop=True)
                             escrever_dataframe_na_aba(mapa_abas, ABA_CADASTRO, df_cadastro, COLUNAS_CADASTRO)
                             sincronizar_lista_presenca(mapa_abas, forcar_gravacao=False)
-
-                            if st.session_state.jogador_editando_original == jogador_alvo:
-                                resetar_form_cadastro()
 
                             st.session_state.pendente_excluir_jogador = ""
                             st.success("Jogador excluído com sucesso.")
                             st.rerun()
 
                     with c2:
-                        st.markdown('<div class="sereno-btn-neutral">', unsafe_allow_html=True)
-                        if st.button("CANCELAR", use_container_width=True):
+                        st.markdown('<div id="btn-cancelar-exclusao" style="display:none;"></div>', unsafe_allow_html=True)
+                        if st.button("Cancelar exclusão", use_container_width=True):
                             st.session_state.pendente_excluir_jogador = ""
                             st.rerun()
-                        st.markdown("</div>", unsafe_allow_html=True)
-
-                st.markdown("</div>", unsafe_allow_html=True)
         else:
-            st.warning("Área de edição restrita ao administrador.")
+            st.warning("Área de Edição restrita ao Adm.!")
 
     # ======================================================
     # ABA 2 - JOGADORES CADASTRADOS
     # ======================================================
     with abas[1]:
-        st.markdown(
-            """
-            <div class="sereno-card">
-                <div class="sereno-card-header">Jogadores</div>
-                <div class="sereno-card-sub">Lista completa do elenco do Sereno FC</div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
         df_cadastro = ler_aba_com_cabecalho(mapa_abas, ABA_CADASTRO, COLUNAS_CADASTRO)
         df_cadastro["NOME"] = df_cadastro["NOME"].astype(str).str.strip()
         df_cadastro["POSICAO"] = df_cadastro["POSICAO"].astype(str).str.strip()
         df_cadastro = df_cadastro[df_cadastro["NOME"] != ""].reset_index(drop=True)
-
-        termo_busca = st.text_input("Buscar jogador", placeholder="Buscar jogador...")
 
         if df_cadastro.empty:
             st.info("Nenhum jogador cadastrado ainda.")
@@ -1444,28 +1170,13 @@ try:
             df_exibir["CATEGORIA"] = df_exibir.apply(
                 lambda row: descobrir_categoria_jogador(row.to_dict()), axis=1
             )
-
-            if termo_busca.strip():
-                filtro = termo_busca.strip().upper()
-                df_exibir = df_exibir[
-                    df_exibir["NOME"].astype(str).str.upper().str.contains(filtro, na=False) |
-                    df_exibir["CATEGORIA"].astype(str).str.upper().str.contains(filtro, na=False) |
-                    df_exibir["POSICAO"].astype(str).str.upper().str.contains(filtro, na=False)
-                ].reset_index(drop=True)
-
-            if df_exibir.empty:
-                st.warning("Nenhum jogador encontrado para a busca informada.")
-            else:
-                exibir_tabela_html(
-                    df_exibir[["NOME", "CATEGORIA", "POSICAO"]],
-                    badge_colunas=["CATEGORIA"]
-                )
+            exibir_tabela_html(df_exibir[["NOME", "CATEGORIA", "POSICAO"]])
 
     # ======================================================
     # ABA 3 - PRESENÇA
     # ======================================================
     with abas[2]:
-        df_presenca = pd.DataFrame(columns=COLUNAS_PRESENCA)
+        st.markdown('<div id="btn-atualizar-presenca" style="display:none;"></div>', unsafe_allow_html=True)
 
         if st.session_state.get("forcar_atualizacao_presenca", False):
             limpar_cache_planilha()
@@ -1473,114 +1184,92 @@ try:
             aplicar_df_presenca_ao_estado(df_fresco)
             st.session_state.forcar_atualizacao_presenca = False
 
+        if st.button("🔄 Atualizar Presenças", use_container_width=True):
+            limpar_cache_planilha()
+            df_fresco = sincronizar_lista_presenca(mapa_abas, forcar_gravacao=False)
+            aplicar_df_presenca_ao_estado(df_fresco)
+            st.rerun()
+
         df_presenca = sincronizar_lista_presenca(mapa_abas, forcar_gravacao=False)
         df_presenca["NOME"] = df_presenca["NOME"].astype(str).str.strip()
         df_presenca = df_presenca[df_presenca["NOME"] != ""].reset_index(drop=True)
 
         inicializar_estado_checkboxes_presenca(df_presenca)
 
-        total = len(df_presenca)
-        confirmados = 0
-        for _, row in df_presenca.iterrows():
-            nome = normalizar_nome(row["NOME"])
-            if st.session_state.get(chave_checkbox_presenca(nome), False):
-                confirmados += 1
-
-        st.markdown(
-            f"""
-            <div class="sereno-card">
-                <div class="sereno-card-header">Lista de Presença</div>
-                <div class="sereno-card-sub">Confirme os jogadores que vão participar da partida. <span style="color:#ff8c1a;font-weight:900;">{confirmados}/{total} confirmados</span></div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
         if st.session_state.admin_autenticado:
-            colb1, colb2, colb3, colb4 = st.columns([1, 1, 1, 1.2])
+            col1, col2, col3 = st.columns(3)
 
-            with colb1:
-                st.markdown('<div class="sereno-btn-neutral">', unsafe_allow_html=True)
-                if st.button("ATUALIZAR", use_container_width=True):
-                    limpar_cache_planilha()
-                    df_fresco = sincronizar_lista_presenca(mapa_abas, forcar_gravacao=False)
-                    aplicar_df_presenca_ao_estado(df_fresco)
+            with col1:
+                st.markdown('<div id="btn-salvar-presenca" style="display:none;"></div>', unsafe_allow_html=True)
+                if st.button("Salvar Presenças", use_container_width=True):
+                    novo_df_presenca = construir_df_presenca_a_partir_dos_checkboxes(df_presenca)
+                    escrever_dataframe_na_aba(mapa_abas, ABA_PRESENCA, novo_df_presenca, COLUNAS_PRESENCA)
+                    aplicar_df_presenca_ao_estado(novo_df_presenca)
+
+                    st.success("Lista de presença salva com sucesso.")
                     st.rerun()
-                st.markdown("</div>", unsafe_allow_html=True)
 
-            with colb2:
-                st.markdown('<div class="sereno-btn-neutral">', unsafe_allow_html=True)
-                if st.button("MARCAR TODOS", use_container_width=True):
+            with col2:
+                st.markdown('<div id="btn-marcar-sim" style="display:none;"></div>', unsafe_allow_html=True)
+                if st.button("Marcar Todos", use_container_width=True):
                     if not df_presenca.empty:
                         df_presenca["PRESENCA"] = "SIM"
                         escrever_dataframe_na_aba(mapa_abas, ABA_PRESENCA, df_presenca, COLUNAS_PRESENCA)
                         forcar_estado_checkboxes_presenca(df_presenca, True)
-                    st.success("Todos os jogadores foram marcados como presentes.")
-                    st.rerun()
-                st.markdown("</div>", unsafe_allow_html=True)
 
-            with colb3:
-                st.markdown('<div class="sereno-btn-neutral">', unsafe_allow_html=True)
-                if st.button("ZERAR", use_container_width=True):
+                    st.success("Todos os jogadores foram marcados como SIM.")
+                    st.rerun()
+
+            with col3:
+                st.markdown('<div id="btn-marcar-nao" style="display:none;"></div>', unsafe_allow_html=True)
+                if st.button("Desmarcar Todos", use_container_width=True):
                     if not df_presenca.empty:
                         df_presenca["PRESENCA"] = "NÃO"
                         escrever_dataframe_na_aba(mapa_abas, ABA_PRESENCA, df_presenca, COLUNAS_PRESENCA)
                         forcar_estado_checkboxes_presenca(df_presenca, False)
-                    st.success("Presenças zeradas com sucesso.")
-                    st.rerun()
-                st.markdown("</div>", unsafe_allow_html=True)
 
-            with colb4:
-                if st.button("SALVAR", use_container_width=True):
-                    novo_df_presenca = construir_df_presenca_a_partir_dos_checkboxes(df_presenca)
-                    escrever_dataframe_na_aba(mapa_abas, ABA_PRESENCA, novo_df_presenca, COLUNAS_PRESENCA)
-                    aplicar_df_presenca_ao_estado(novo_df_presenca)
-                    st.success("Lista de presença salva com sucesso.")
+                    st.success("Presenças zeradas com sucesso.")
                     st.rerun()
 
             if df_presenca.empty:
-                st.info("Nenhum jogador disponível na lista de presença. Cadastre jogadores na aba CADASTRO.")
+                st.info("Nenhum jogador disponível na lista de presença. Cadastre jogadores na aba CADASTRO DE JOGADORES.")
             else:
-                st.markdown("<div class='sereno-presenca-card'>", unsafe_allow_html=True)
+                st.markdown("<div class='sereno-card-presenca'>", unsafe_allow_html=True)
+
                 for _, row in df_presenca.iterrows():
                     nome = normalizar_nome(row["NOME"])
                     st.checkbox(f"**{nome}**", key=chave_checkbox_presenca(nome))
+
                 st.markdown("</div>", unsafe_allow_html=True)
         else:
-            st.warning("Alterações de presença restritas ao administrador.")
+            st.warning("Alterações de Presença restritas ao Adm.!")
 
     # ======================================================
     # ABA 4 - SORTEIO
     # ======================================================
     with abas[3]:
+        st.markdown('<div id="btn-atualizar-dados" style="display:none;"></div>', unsafe_allow_html=True)
+        if st.button("🔄 Atualizar Dados", use_container_width=True):
+            limpar_cache_planilha()
+            st.rerun()
+
         df_sorteio_leitura = ler_aba_com_cabecalho(mapa_abas, ABA_SORTEIO, COLUNAS_SORTEIO)
         df_sorteio_leitura["Ordem"] = df_sorteio_leitura["Ordem"].astype(str).str.strip()
         df_sorteio_valido = df_sorteio_leitura[df_sorteio_leitura["Ordem"] != ""].reset_index(drop=True)
         tem_jogadores_sorteados = not df_sorteio_valido.empty
 
-        st.markdown(
-            """
-            <div class="sereno-card">
-                <div class="sereno-card-header">Sorteio de Times</div>
-                <div class="sereno-card-sub">Gerencie o sorteio e gere o resumo final.</div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
         if st.session_state.admin_autenticado:
-            col1, col2, col3 = st.columns([1, 1, 1.2])
+            col1, col2 = st.columns(2)
 
             with col1:
-                st.markdown('<div class="sereno-btn-neutral">', unsafe_allow_html=True)
-                if st.button("ATUALIZAR DADOS", use_container_width=True):
-                    limpar_cache_planilha()
+                st.markdown('<div id="btn-sortear" style="display:none;"></div>', unsafe_allow_html=True)
+                if st.button("Sortear times", use_container_width=True):
+                    st.session_state.confirmar_sorteio_pendente = True
                     st.rerun()
-                st.markdown("</div>", unsafe_allow_html=True)
 
             with col2:
-                st.markdown('<div class="sereno-btn-neutral">', unsafe_allow_html=True)
-                if st.button("LIMPAR SORTEIO", use_container_width=True):
+                st.markdown('<div id="btn-limpar" style="display:none;"></div>', unsafe_allow_html=True)
+                if st.button("Limpar sorteio", use_container_width=True):
                     restante = obter_segundos_restantes_bloqueio(mapa_abas)
                     if restante <= 0 or not tem_jogadores_sorteados:
                         realizar_limpeza_sorteio(mapa_abas)
@@ -1588,43 +1277,32 @@ try:
                         st.session_state.exigir_senha_master_acao = True
                         st.session_state.erro_senha_master_acao = ""
                         st.session_state.tipo_acao_pendente = "limpar"
-                st.markdown("</div>", unsafe_allow_html=True)
-
-            with col3:
-                if st.button("SORTEAR TIMES", use_container_width=True):
-                    st.session_state.confirmar_sorteio_pendente = True
-                    st.rerun()
 
             if st.session_state.confirmar_sorteio_pendente:
-                st.markdown(
-                    """
-                    <div class="sereno-confirm-box">
-                        <div class="titulo">Tem certeza que deseja realizar o sorteio? Outro sorteio sem senha só poderá ser feito após 10 minutos.</div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
-                c1, c2 = st.columns(2)
+                with st.container(border=True):
+                    st.warning("TEM CERTEZA QUE DESEJA FAZER O SORTEIO?     OUTRO SORTEIO AUTORIZADO SÓ DAQUI A 10 MINUTOS!     PENSE BEM...")
 
-                with c1:
-                    if st.button("CONFIRMAR SORTEIO", use_container_width=True):
-                        st.session_state.confirmar_sorteio_pendente = False
-                        restante = obter_segundos_restantes_bloqueio(mapa_abas)
+                    c1, c2 = st.columns(2)
 
-                        if restante <= 0 or not tem_jogadores_sorteados:
-                            realizar_sorteio(mapa_abas)
-                        else:
-                            st.session_state.exigir_senha_master_acao = True
-                            st.session_state.erro_senha_master_acao = ""
-                            st.session_state.tipo_acao_pendente = "sortear"
+                    with c1:
+                        st.markdown('<div id="btn-confirmar-sorteio" style="display:none;"></div>', unsafe_allow_html=True)
+                        if st.button("Confirmar sorteio", use_container_width=True):
+                            st.session_state.confirmar_sorteio_pendente = False
+                            restante = obter_segundos_restantes_bloqueio(mapa_abas)
+
+                            if restante <= 0 or not tem_jogadores_sorteados:
+                                realizar_sorteio(mapa_abas)
+                            else:
+                                st.session_state.exigir_senha_master_acao = True
+                                st.session_state.erro_senha_master_acao = ""
+                                st.session_state.tipo_acao_pendente = "sortear"
+                                st.rerun()
+
+                    with c2:
+                        st.markdown('<div id="btn-cancelar-sorteio" style="display:none;"></div>', unsafe_allow_html=True)
+                        if st.button("Cancelar", use_container_width=True):
+                            st.session_state.confirmar_sorteio_pendente = False
                             st.rerun()
-
-                with c2:
-                    st.markdown('<div class="sereno-btn-neutral">', unsafe_allow_html=True)
-                    if st.button("CANCELAR", use_container_width=True):
-                        st.session_state.confirmar_sorteio_pendente = False
-                        st.rerun()
-                    st.markdown("</div>", unsafe_allow_html=True)
 
             if st.session_state.exigir_senha_master_acao:
                 restante = obter_segundos_restantes_bloqueio(mapa_abas)
@@ -1636,7 +1314,7 @@ try:
                     f"Digite a senha master para autorizar {acao_txt} agora."
                 )
 
-                with st.container():
+                with st.container(border=True):
                     senha_master_digitada = st.text_input(
                         "Senha master",
                         type="password",
@@ -1644,8 +1322,10 @@ try:
                     )
 
                     c1, c2 = st.columns(2)
+
                     with c1:
-                        if st.button("AUTORIZAR", use_container_width=True):
+                        st.markdown('<div id="btn-autorizar-senha" style="display:none;"></div>', unsafe_allow_html=True)
+                        if st.button("Autorizar", use_container_width=True):
                             if senha_master_digitada == SENHA_MASTER_SORTEIO:
                                 st.session_state.exigir_senha_master_acao = False
                                 st.session_state.erro_senha_master_acao = ""
@@ -1658,30 +1338,21 @@ try:
                                 st.session_state.erro_senha_master_acao = "Senha master inválida."
 
                     with c2:
-                        st.markdown('<div class="sereno-btn-neutral">', unsafe_allow_html=True)
-                        if st.button("CANCELAR AUTORIZAÇÃO", use_container_width=True):
+                        st.markdown('<div id="btn-cancelar-senha" style="display:none;"></div>', unsafe_allow_html=True)
+                        if st.button("Cancelar", use_container_width=True):
                             st.session_state.exigir_senha_master_acao = False
                             st.session_state.erro_senha_master_acao = ""
                             st.session_state.tipo_acao_pendente = ""
                             st.rerun()
-                        st.markdown("</div>", unsafe_allow_html=True)
 
                     if st.session_state.erro_senha_master_acao:
                         st.error(st.session_state.erro_senha_master_acao)
+
         else:
-            st.warning("Sortear e limpar sorteio são ações restritas ao administrador.")
+            st.warning("Sortear e Limpar Sorteio são ações para o Adm.!")
 
         if not tem_jogadores_sorteados:
-            st.markdown(
-                """
-                <div class="sereno-table-wrap">
-                    <div class="sereno-empty">
-                        Nenhum sorteio ativo.
-                    </div>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
+            st.info("Ainda não há sorteio realizado!")
         else:
             exibir_tabela_html(
                 df_sorteio_valido[["Ordem", "Time A", "Time B"]],
@@ -1689,17 +1360,17 @@ try:
             )
 
             link_whatsapp = gerar_link_whatsapp_sorteio(df_sorteio_leitura)
+            st.markdown('<div id="btn-whatsapp" style="display:none;"></div>', unsafe_allow_html=True)
             st.link_button("RESUMO PARA WHATSAPP", link_whatsapp, use_container_width=True)
-
-        st.markdown(
-            "<div class='sereno-foot'>App criado por: Teori@ / Sereno FC</div>",
-            unsafe_allow_html=True
-        )
+            st.markdown(
+                "<div style='text-align:center; font-size:1rem; font-weight:600; color:#374151; margin-top:10px;'>App criado por: Teori@ / Sereno FC</div>",
+                unsafe_allow_html=True
+            )
 
     # ======================================================
     # LOGO NO FINAL DA PÁGINA
     # ======================================================
-    col_logo_esq, col_logo_centro, col_logo_dir = st.columns([1, 1.3, 1])
+    col_logo_esq, col_logo_centro, col_logo_dir = st.columns([1, 1.5, 1])
     with col_logo_centro:
         logo_path = Path("SERENO FC.png")
         if logo_path.exists():
