@@ -51,7 +51,7 @@ ADMIN_SENHA = "fc"
 # CONTROLE DE NOVO SORTEIO / LIMPAR SORTEIO
 # ==========================================================
 TEMPO_BLOQUEIO_SORTEIO_SEGUNDOS = 10 * 60
-SENHA_MASTER_SORTEIO = "123"
+SENHA_MASTER_SORTEIO = "@"
 
 # ==========================================================
 # ESTILO
