@@ -164,21 +164,16 @@ def aplicar_estilo_global():
             box-shadow: 0 4px 14px rgba(0,0,0,0.04);
         }
 
-        /* Estilo específico para campos de texto dentro do form do Admin (Login) no Sidebar */
-        /* Isso garante que as caixas fiquem visíveis para leigos e tenham profundidade */
         div[data-testid="stSidebar"] div[data-testid="stForm"] .stTextInput div[data-baseweb="input"] {
-            background-color: #ffffff !important; /* Força fundo branco */
-            border: 2px solid #d1d5db !important; /* Borda visível cinza média */
+            background-color: #ffffff !important;
+            border: 2px solid #d1d5db !important;
             border-radius: 12px !important;
-            /* Sensação de profundidade com uma sombra interna soft */
             box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05) !important;
             transition: border-color 0.2s, box-shadow 0.2s;
         }
 
-        /* Efeito no Focus da caixa de texto do Login */
         div[data-testid="stSidebar"] div[data-testid="stForm"] .stTextInput div[data-baseweb="input"]:focus-within {
-            border-color: #3b82f6 !important; /* Azul no focus */
-            /* Realça a profundidade ao focar */
+            border-color: #3b82f6 !important;
             box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05), 0 0 0 3px rgba(59, 130, 246, 0.2) !important;
         }
 
@@ -241,7 +236,9 @@ def aplicar_estilo_global():
         div.element-container:has(#btn-cancelar-exclusao),
         div.element-container:has(#btn-autorizar-senha),
         div.element-container:has(#btn-cancelar-senha),
-        div.element-container:has(#btn-whatsapp) {
+        div.element-container:has(#btn-whatsapp),
+        div.element-container:has(#btn-confirmar-sorteio),
+        div.element-container:has(#btn-cancelar-sorteio) {
             display: none !important;
         }
 
@@ -269,7 +266,7 @@ def aplicar_estilo_global():
         div.element-container:has(#btn-limpar) + div.element-container div.stButton > button {
             background-color: #ffedd5 !important; border-color: #fed7aa !important; color: #9a3412 !important;
         }
-        
+
         /* Cores Cirúrgicas para aba Cadastro */
         div.element-container:has(#btn-salvar-jogador) + div.element-container button {
             background-color: #d1fae5 !important; border-color: #a7f3d0 !important; color: #065f46 !important;
@@ -287,6 +284,14 @@ def aplicar_estilo_global():
             background-color: #f3f4f6 !important; border-color: #e5e7eb !important; color: #1f2937 !important;
         }
 
+        /* Cores Cirúrgicas para confirmação do sorteio */
+        div.element-container:has(#btn-confirmar-sorteio) + div.element-container button {
+            background-color: #fef08a !important; border-color: #fde047 !important; color: #854d0e !important;
+        }
+        div.element-container:has(#btn-cancelar-sorteio) + div.element-container button {
+            background-color: #f3f4f6 !important; border-color: #e5e7eb !important; color: #1f2937 !important;
+        }
+
         /* Cores Cirúrgicas para a Senha Master */
         div.element-container:has(#btn-autorizar-senha) + div.element-container button {
             background-color: #d1fae5 !important; border-color: #a7f3d0 !important; color: #065f46 !important;
@@ -297,8 +302,8 @@ def aplicar_estilo_global():
 
         /* Cor Oficial do WhatsApp para o botão de link */
         div.element-container:has(#btn-whatsapp) + div.element-container a {
-            background-color: #25D366 !important; 
-            border-color: #128C7E !important; 
+            background-color: #25D366 !important;
+            border-color: #128C7E !important;
             color: #ffffff !important;
             border-radius: 12px !important;
         }
@@ -328,8 +333,7 @@ def render_table_html(df, centralizar_colunas=None):
     linhas_html = ""
     for _, row in df.iterrows():
         linhas_html += "<tr>"
-        
-        # Identifica se a linha atual é de reservas (Ordem >= 12)
+
         is_reserva = False
         if "Ordem" in df.columns:
             try:
@@ -342,11 +346,10 @@ def render_table_html(df, centralizar_colunas=None):
             valor = row[col]
             valor = "" if pd.isna(valor) else str(valor)
             classe = "sereno-centralizado" if col in centralizar_colunas else ""
-            
-            # Aplica vermelho e negrito se for reserva e for nome de jogador (Time A ou Time B)
+
             if is_reserva and col in ["Time A", "Time B"] and str(valor).strip() != "":
                 valor = f"<span style='color: #dc2626; font-weight: bold;'>{valor}</span>"
-                
+
             linhas_html += f"<td class='{classe}'>{valor}</td>"
         linhas_html += "</tr>"
 
@@ -896,6 +899,7 @@ def realizar_sorteio(mapa_abas):
     st.session_state.exigir_senha_master_acao = False
     st.session_state.erro_senha_master_acao = ""
     st.session_state.tipo_acao_pendente = ""
+    st.session_state.confirmar_sorteio_pendente = False
 
     st.success("Sorteio realizado com sucesso.")
     st.rerun()
@@ -927,6 +931,9 @@ if "pendente_excluir_jogador" not in st.session_state:
 if "forcar_atualizacao_presenca" not in st.session_state:
     st.session_state.forcar_atualizacao_presenca = False
 
+if "confirmar_sorteio_pendente" not in st.session_state:
+    st.session_state.confirmar_sorteio_pendente = False
+
 # ==========================================================
 # ESTILO
 # ==========================================================
@@ -940,7 +947,6 @@ with st.sidebar:
 
     if not st.session_state.admin_autenticado:
         with st.form("form_login_admin", clear_on_submit=True):
-            # Adicionados Placeholders para leigos saberem onde digitar
             usuario_admin = st.text_input("Usuário", placeholder="Digite o usuário...")
             senha_admin = st.text_input("Senha", type="password", placeholder="Digite a senha...")
             entrar_admin = st.form_submit_button("Entrar")
@@ -949,7 +955,6 @@ with st.sidebar:
             if usuario_admin == ADMIN_USUARIO and senha_admin == ADMIN_SENHA:
                 st.session_state.admin_autenticado = True
                 st.session_state.admin_erro_login = ""
-                # Liga o gatilho para forçar a atualização dos botões de presença na tela principal
                 st.session_state.forcar_atualizacao_presenca = True
                 st.rerun()
             else:
@@ -1026,7 +1031,7 @@ try:
                     [""] + OPCOES_CATEGORIA,
                     format_func=formatar_opcao_vazia
                 )
-                
+
                 st.markdown('<div id="btn-salvar-jogador" style="display:none;"></div>', unsafe_allow_html=True)
                 enviar_cadastro = st.form_submit_button("Salvar jogador")
 
@@ -1074,7 +1079,7 @@ try:
                     [""] + OPCOES_CATEGORIA,
                     format_func=formatar_opcao_vazia
                 )
-                
+
                 st.markdown('<div id="btn-atualizar-jogador" style="display:none;"></div>', unsafe_allow_html=True)
                 salvar_edicao = st.form_submit_button("Atualizar jogador")
 
@@ -1109,7 +1114,7 @@ try:
                     format_func=formatar_opcao_vazia,
                     key="excluir_jogador"
                 )
-                
+
                 st.markdown('<div id="btn-excluir-jogador" style="display:none;"></div>', unsafe_allow_html=True)
                 excluir = st.form_submit_button("Excluir jogador")
 
@@ -1172,8 +1177,7 @@ try:
     # ======================================================
     with abas[2]:
         st.markdown('<div id="btn-atualizar-presenca" style="display:none;"></div>', unsafe_allow_html=True)
-        
-        # Gatilho ativado pelo Login (Força a atualização dos dados e reseta a memória das caixas)
+
         if st.session_state.get("forcar_atualizacao_presenca", False):
             limpar_cache_planilha()
             df_fresco = sincronizar_lista_presenca(mapa_abas, forcar_gravacao=False)
@@ -1249,7 +1253,6 @@ try:
             limpar_cache_planilha()
             st.rerun()
 
-        # Lê os dados de sorteio atual para checar se a tabela está vazia
         df_sorteio_leitura = ler_aba_com_cabecalho(mapa_abas, ABA_SORTEIO, COLUNAS_SORTEIO)
         df_sorteio_leitura["Ordem"] = df_sorteio_leitura["Ordem"].astype(str).str.strip()
         df_sorteio_valido = df_sorteio_leitura[df_sorteio_leitura["Ordem"] != ""].reset_index(drop=True)
@@ -1261,26 +1264,45 @@ try:
             with col1:
                 st.markdown('<div id="btn-sortear" style="display:none;"></div>', unsafe_allow_html=True)
                 if st.button("Sortear times", use_container_width=True):
-                    restante = obter_segundos_restantes_bloqueio(mapa_abas)
-                    # Ignora a senha de bloqueio se não houver time montado
-                    if restante <= 0 or not tem_jogadores_sorteados:
-                        realizar_sorteio(mapa_abas)
-                    else:
-                        st.session_state.exigir_senha_master_acao = True
-                        st.session_state.erro_senha_master_acao = ""
-                        st.session_state.tipo_acao_pendente = "sortear"
+                    st.session_state.confirmar_sorteio_pendente = True
+                    st.rerun()
 
             with col2:
                 st.markdown('<div id="btn-limpar" style="display:none;"></div>', unsafe_allow_html=True)
                 if st.button("Limpar sorteio", use_container_width=True):
                     restante = obter_segundos_restantes_bloqueio(mapa_abas)
-                    # Ignora a senha de bloqueio se não houver time montado
                     if restante <= 0 or not tem_jogadores_sorteados:
                         realizar_limpeza_sorteio(mapa_abas)
                     else:
                         st.session_state.exigir_senha_master_acao = True
                         st.session_state.erro_senha_master_acao = ""
                         st.session_state.tipo_acao_pendente = "limpar"
+
+            if st.session_state.confirmar_sorteio_pendente:
+                with st.container(border=True):
+                    st.warning("Tem certeza que deseja realizar o sorteio?")
+
+                    c1, c2 = st.columns(2)
+
+                    with c1:
+                        st.markdown('<div id="btn-confirmar-sorteio" style="display:none;"></div>', unsafe_allow_html=True)
+                        if st.button("Confirmar sorteio", use_container_width=True):
+                            st.session_state.confirmar_sorteio_pendente = False
+                            restante = obter_segundos_restantes_bloqueio(mapa_abas)
+
+                            if restante <= 0 or not tem_jogadores_sorteados:
+                                realizar_sorteio(mapa_abas)
+                            else:
+                                st.session_state.exigir_senha_master_acao = True
+                                st.session_state.erro_senha_master_acao = ""
+                                st.session_state.tipo_acao_pendente = "sortear"
+                                st.rerun()
+
+                    with c2:
+                        st.markdown('<div id="btn-cancelar-sorteio" style="display:none;"></div>', unsafe_allow_html=True)
+                        if st.button("Cancelar", use_container_width=True):
+                            st.session_state.confirmar_sorteio_pendente = False
+                            st.rerun()
 
             if st.session_state.exigir_senha_master_acao:
                 restante = obter_segundos_restantes_bloqueio(mapa_abas)
