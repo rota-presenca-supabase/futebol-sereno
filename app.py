@@ -44,7 +44,7 @@ FUSO_BR = ZoneInfo("America/Sao_Paulo")
 FORMATO_SORTEIO = "%Y-%m-%d %H:%M:%S"
 FORMATO_DATA_CONTROLE = "%Y-%m-%d"
 
-JOGADORES_FIXOS_TIME_A = ["EVERTHON", "DOUGLAS CARECA", "TEORIA", "LUCAS", "ALEXANDRE", "BIMBO"]
+JOGADORES_FIXOS_TIME_A = ["TEORIA", "ALEXANDRE"]
 CHAVE_DATA_ULTIMO_SORTEIO_FIXOS = "DATA_ULTIMO_SORTEIO_FIXOS_TIME_A"
 
 # ==========================================================
