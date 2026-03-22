@@ -63,7 +63,7 @@ FORMATO_SORTEIO = "%Y-%m-%d %H:%M:%S"
 ADMIN_USUARIO = "Sereno"
 ADMIN_SENHA = "fc"
 ADMIN_SENHA_TORNEIO_LOGIN = "torneio"
-SENHA_MASTER_SORTEIO = "@"
+SENHA_MASTER_SORTEIO = "123"
 SENHA_TORNEIO = "123"
 
 # ==========================================================
