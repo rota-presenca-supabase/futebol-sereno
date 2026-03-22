@@ -230,21 +230,11 @@ def aplicar_estilo_global():
         button[data-baseweb="tab"] p, div[data-testid="stTabs"] button p { font-size: 1.05rem !important; }
 
         div[data-testid="stCheckbox"] {
-            padding: 4px 6px;
+            padding: 10px 12px;
             border-radius: 12px;
             border: 1px solid #efefef;
-            margin-bottom: 0;
+            margin-bottom: 6px;
             background: #ffffff;
-            min-height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        div[data-testid="stCheckbox"] label {
-            width: 100%;
-            justify-content: center;
-            margin: 0;
         }
 
         div[data-testid="stCheckbox"] label p {
@@ -326,22 +316,6 @@ def aplicar_estilo_global():
             color: #ffffff !important;
             font-weight: 800 !important;
         }
-
-        @media (max-width: 640px) {
-            .sereno-jogador-linha {
-                gap: 8px;
-                padding: 8px 10px;
-            }
-            .sereno-jogador-nome {
-                font-size: 0.98rem;
-            }
-            .sereno-pill {
-                font-size: 0.70rem;
-                padding: 3px 8px;
-                margin-left: 0;
-            }
-        }
-
         </style>
         """,
         unsafe_allow_html=True,
@@ -1371,13 +1345,13 @@ try:
                 cor = cor_categoria(categoria)
 
                 st.markdown("<div class='sereno-jogador-linha'>", unsafe_allow_html=True)
-                col1, col2 = st.columns([0.90, 0.10], vertical_alignment="center")
+                col1, col2 = st.columns([6.3, 1.7])
                 with col1:
                     st.markdown(
                         f"""
-                        <div style="display:flex; align-items:center; gap:8px; min-width:0; white-space:nowrap; overflow:hidden;">
-                            <span class="sereno-jogador-nome" style="color:{cor}; text-overflow:ellipsis; overflow:hidden;">{nome}</span>
-                            <span class="sereno-pill" style="background:{cor}; flex-shrink:0;">{categoria or "SEM CATEGORIA"}</span>
+                        <div>
+                            <span class="sereno-jogador-nome" style="color:{cor};">{nome}</span>
+                            <span class="sereno-pill" style="background:{cor};">{categoria or "SEM CATEGORIA"}</span>
                         </div>
                         """,
                         unsafe_allow_html=True,
@@ -1386,10 +1360,9 @@ try:
                     chave_diarista = f"jogador_diarista::{idx}::{nome}"
                     valor_inicial = categoria == "DIARISTA"
                     marcado = st.checkbox(
-                        "",
+                        "DIARISTA",
                         value=valor_inicial,
                         key=chave_diarista,
-                        label_visibility="collapsed",
                         disabled=not st.session_state.admin_autenticado,
                     )
                     if st.session_state.admin_autenticado and marcado and categoria != "DIARISTA":
