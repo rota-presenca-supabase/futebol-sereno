@@ -1043,7 +1043,24 @@ def obter_dt_ultimo_sorteio_torneio(mapa_abas):
     return parse_timestamp_sorteio(texto)
 
 
+def torneio_esta_limpo(mapa_abas):
+    cap_a, cap_b = obter_capitaes_torneio(mapa_abas)
+    dt_ultimo = obter_dt_ultimo_sorteio_torneio(mapa_abas)
+    df_torneio = ler_aba_com_cabecalho(mapa_abas, ABA_TORNEIO_SORTEIO, COLUNAS_TORNEIO_SORTEIO)
+    if not df_torneio.empty and "Ordem" in df_torneio.columns:
+        df_torneio = df_torneio.copy()
+        df_torneio["Ordem"] = df_torneio["Ordem"].astype(str).str.strip()
+        tem_resultado = not df_torneio[df_torneio["Ordem"] != ""].empty
+    else:
+        tem_resultado = False
+    return (not cap_a) and (not cap_b) and (dt_ultimo is None) and (not tem_resultado)
+
+
 def selecionar_capitaes_automaticamente(mapa_abas):
+    if not torneio_esta_limpo(mapa_abas):
+        st.error("Só é permitido selecionar novos capitães automaticamente quando o sorteio do torneio estiver limpo.")
+        return
+
     df_cadastro = obter_df_cadastro_tratado(mapa_abas)
     df_diretoria = df_cadastro[df_cadastro.apply(lambda row: descobrir_categoria_jogador(row.to_dict()) == "DIRETORIA", axis=1)].copy()
 
@@ -1556,6 +1573,12 @@ try:
             st.info("Ainda não houve sorteio do torneio.")
         st.markdown("</div>", unsafe_allow_html=True)
 
+        torneio_limpo = torneio_esta_limpo(mapa_abas)
+        if torneio_limpo:
+            st.success("Torneio limpo: a seleção automática de novos capitães está liberada.")
+        else:
+            st.warning("Para selecionar novos capitães automaticamente, primeiro use LIMPAR_SORTEIO. Ao limpar, a dupla de capitães também é apagada.")
+
         senha_torneio_digitada = st.text_input("Senha_torneio", type="password", key="senha_torneio_digitada")
         senha_master_torneio = st.text_input(
             "Senha master (somente para liberar novo sorteio antes de 3 meses ou limpar sorteio)",
@@ -1571,6 +1594,8 @@ try:
                 if st.button("SELECIONAR CAPITÃES AUTOMATICAMENTE", use_container_width=True):
                     if senha_torneio_digitada != SENHA_TORNEIO:
                         st.error("Senha_torneio inválida.")
+                    elif not torneio_limpo:
+                        st.error("Só é permitido selecionar novos capitães automaticamente quando o sorteio do torneio estiver limpo.")
                     else:
                         selecionar_capitaes_automaticamente(mapa_abas)
 
