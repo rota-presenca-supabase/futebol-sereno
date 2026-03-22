@@ -25,15 +25,14 @@ NOME_PLANILHA = "FUTEBOL_SERENO"
 ABA_CADASTRO = "CADASTRO_JOGADORES"
 ABA_PRESENCA = "LISTA_PRESENCA"
 ABA_SORTEIO = "LISTA_SORTEIO"
-ABA_CONTROLE_SORTEIO = "CONTROLE_SORTEIO"
 
-COLUNAS_CADASTRO = ["NOME", "MENSALISTA", "DIARISTA", "CONVIDADO", "CRIANÇA", "POSICAO"]
+COLUNAS_CADASTRO = ["NOME", "DIRETORIA", "MENSALISTA", "DIARISTA", "CONVIDADO_1", "CONVIDADO_2", "POSICAO"]
 COLUNAS_PRESENCA = ["NOME", "PRESENCA"]
 COLUNAS_SORTEIO = ["Ordem", "Time A", "Time B", "SORTEIO"]
-COLUNAS_CONTROLE_SORTEIO = ["CHAVE", "VALOR"]
 
 OPCOES_POSICAO = ["ZAGUEIRO", "MEIO CAMPO", "ATACANTE"]
-OPCOES_CATEGORIA = ["MENSALISTA", "DIARISTA", "CONVIDADO", "CRIANÇA"]
+OPCOES_CATEGORIA = ["DIRETORIA", "MENSALISTA", "DIARISTA", "CONVIDADO_1", "CONVIDADO_2"]
+MAPA_COLUNAS_CADASTRO_LEGADO = {"CONVIDADO": "CONVIDADO_1", "CRIANÇA": "CONVIDADO_2"}
 
 SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",
@@ -42,10 +41,6 @@ SCOPES = [
 
 FUSO_BR = ZoneInfo("America/Sao_Paulo")
 FORMATO_SORTEIO = "%Y-%m-%d %H:%M:%S"
-FORMATO_DATA_CONTROLE = "%Y-%m-%d"
-
-JOGADORES_FIXOS_TIME_A = ["TEORIA", "ALEXANDRE"]
-CHAVE_DATA_ULTIMO_SORTEIO_FIXOS = "DATA_ULTIMO_SORTEIO_FIXOS_TIME_A"
 
 # ==========================================================
 # ACESSO ADMINISTRADOR
@@ -473,10 +468,6 @@ def gerar_link_whatsapp_sorteio(df_sorteio):
 # ==========================================================
 # CONEXÃO
 # ==========================================================
-def carregar_mapa_abas(planilha):
-    worksheets = executar_com_retry(planilha.worksheets)
-    return {ws.title: ws for ws in worksheets}
-
 @st.cache_resource
 def conectar_gsheet():
     creds = Credentials.from_service_account_info(
@@ -485,7 +476,9 @@ def conectar_gsheet():
     )
     client = gspread.authorize(creds)
     planilha = executar_com_retry(client.open, NOME_PLANILHA)
-    mapa_abas = carregar_mapa_abas(planilha)
+
+    worksheets = executar_com_retry(planilha.worksheets)
+    mapa_abas = {ws.title: ws for ws in worksheets}
 
     return planilha, mapa_abas
 
@@ -564,31 +557,14 @@ def escrever_dataframe_na_aba(mapa_abas, nome_aba, df, colunas_esperadas):
     executar_com_retry(ws.update, "A1", valores)
     limpar_cache_planilha()
 
-def inicializar_abas_se_necessario(planilha, mapa_abas):
+def inicializar_abas_se_necessario(mapa_abas):
     configuracoes = [
         (ABA_CADASTRO, COLUNAS_CADASTRO),
         (ABA_PRESENCA, COLUNAS_PRESENCA),
         (ABA_SORTEIO, COLUNAS_SORTEIO),
-        (ABA_CONTROLE_SORTEIO, COLUNAS_CONTROLE_SORTEIO),
     ]
 
-    mapa_abas.update(carregar_mapa_abas(planilha))
-
     for nome_aba, colunas in configuracoes:
-        if nome_aba not in mapa_abas:
-            try:
-                executar_com_retry(
-                    planilha.add_worksheet,
-                    title=nome_aba,
-                    rows=200,
-                    cols=max(len(colunas), 2)
-                )
-            except APIError as e:
-                if "already exists" not in str(e):
-                    raise
-
-            mapa_abas.update(carregar_mapa_abas(planilha))
-
         ws = obter_worksheet(mapa_abas, nome_aba)
         valores = executar_com_retry(ws.get_all_values)
 
@@ -599,14 +575,16 @@ def inicializar_abas_se_necessario(planilha, mapa_abas):
             if cabecalho_atual != colunas:
                 dados_existentes = valores[1:] if len(valores) > 1 else []
                 novos_valores = [colunas]
+                cabecalho_migracao = [MAPA_COLUNAS_CADASTRO_LEGADO.get(col, col) for col in cabecalho_atual] if nome_aba == ABA_CADASTRO else cabecalho_atual
 
                 for linha in dados_existentes:
                     linha = list(linha)
-                    if len(linha) < len(colunas):
-                        linha.extend([""] * (len(colunas) - len(linha)))
-                    elif len(linha) > len(colunas):
-                        linha = linha[:len(colunas)]
-                    novos_valores.append(linha)
+                    registro_antigo = {}
+                    for idx, col_antiga in enumerate(cabecalho_migracao):
+                        registro_antigo[col_antiga] = linha[idx] if idx < len(linha) else ""
+
+                    nova_linha = [registro_antigo.get(coluna_nova, "") for coluna_nova in colunas]
+                    novos_valores.append(nova_linha)
 
                 executar_com_retry(ws.clear)
                 executar_com_retry(ws.update, "A1", novos_valores)
@@ -633,74 +611,26 @@ def chave_checkbox_presenca(nome):
 def montar_linha_cadastro(nome, categoria, posicao):
     return {
         "NOME": nome,
+        "DIRETORIA": "SIM" if categoria == "DIRETORIA" else "NÃO",
         "MENSALISTA": "SIM" if categoria == "MENSALISTA" else "NÃO",
         "DIARISTA": "SIM" if categoria == "DIARISTA" else "NÃO",
-        "CONVIDADO": "SIM" if categoria == "CONVIDADO" else "NÃO",
-        "CRIANÇA": "SIM" if categoria == "CRIANÇA" else "NÃO",
+        "CONVIDADO_1": "SIM" if categoria == "CONVIDADO_1" else "NÃO",
+        "CONVIDADO_2": "SIM" if categoria == "CONVIDADO_2" else "NÃO",
         "POSICAO": posicao,
     }
 
 def descobrir_categoria_jogador(linha):
+    if str(linha.get("DIRETORIA", "")).upper() == "SIM":
+        return "DIRETORIA"
     if str(linha.get("MENSALISTA", "")).upper() == "SIM":
         return "MENSALISTA"
     if str(linha.get("DIARISTA", "")).upper() == "SIM":
         return "DIARISTA"
-    if str(linha.get("CONVIDADO", "")).upper() == "SIM":
-        return "CONVIDADO"
-    if str(linha.get("CRIANÇA", "")).upper() == "SIM":
-        return "CRIANÇA"
+    if str(linha.get("CONVIDADO_1", "")).upper() == "SIM":
+        return "CONVIDADO_1"
+    if str(linha.get("CONVIDADO_2", "")).upper() == "SIM":
+        return "CONVIDADO_2"
     return ""
-
-def obter_valor_controle_sorteio(mapa_abas, chave):
-    df_controle = ler_aba_com_cabecalho(mapa_abas, ABA_CONTROLE_SORTEIO, COLUNAS_CONTROLE_SORTEIO)
-
-    if df_controle.empty:
-        return ""
-
-    chave_normalizada = str(chave).strip().upper()
-
-    for _, row in df_controle.iterrows():
-        chave_linha = str(row.get("CHAVE", "")).strip().upper()
-        if chave_linha == chave_normalizada:
-            return str(row.get("VALOR", "")).strip()
-
-    return ""
-
-def salvar_valor_controle_sorteio(mapa_abas, chave, valor):
-    df_controle = ler_aba_com_cabecalho(mapa_abas, ABA_CONTROLE_SORTEIO, COLUNAS_CONTROLE_SORTEIO)
-
-    if df_controle.empty:
-        df_controle = pd.DataFrame(columns=COLUNAS_CONTROLE_SORTEIO)
-
-    chave_normalizada = str(chave).strip().upper()
-    valor = str(valor).strip()
-
-    indice_existente = None
-    for idx, row in df_controle.iterrows():
-        chave_linha = str(row.get("CHAVE", "")).strip().upper()
-        if chave_linha == chave_normalizada:
-            indice_existente = idx
-            break
-
-    if indice_existente is None:
-        df_controle = pd.concat([
-            df_controle,
-            pd.DataFrame([{"CHAVE": chave_normalizada, "VALOR": valor}])
-        ], ignore_index=True)
-    else:
-        df_controle.at[indice_existente, "CHAVE"] = chave_normalizada
-        df_controle.at[indice_existente, "VALOR"] = valor
-
-    escrever_dataframe_na_aba(mapa_abas, ABA_CONTROLE_SORTEIO, df_controle, COLUNAS_CONTROLE_SORTEIO)
-
-def obter_data_ultimo_sorteio_fixos(mapa_abas):
-    return obter_valor_controle_sorteio(mapa_abas, CHAVE_DATA_ULTIMO_SORTEIO_FIXOS)
-
-def registrar_data_ultimo_sorteio_fixos(mapa_abas, data_referencia):
-    salvar_valor_controle_sorteio(mapa_abas, CHAVE_DATA_ULTIMO_SORTEIO_FIXOS, data_referencia)
-
-def obter_data_atual_referencia():
-    return agora_br().strftime(FORMATO_DATA_CONTROLE)
 
 def obter_ultimo_timestamp_sorteio(mapa_abas):
     valores = ler_valores_aba_tempo_real(mapa_abas, ABA_SORTEIO)
@@ -828,7 +758,7 @@ def distribuir_grupo_para_listas(itens_embaralhados, time_1, time_2):
             time_2.append(item)
             proximo_time = 1
 
-def sortear_times(df_cadastro, df_presenca, jogadores_fixos_time_a=None, aplicar_fixos_time_a=False):
+def sortear_times(df_cadastro, df_presenca):
     cadastro_map = {}
     for _, row in df_cadastro.iterrows():
         nome = normalizar_nome(row["NOME"])
@@ -849,37 +779,15 @@ def sortear_times(df_cadastro, df_presenca, jogadores_fixos_time_a=None, aplicar
                 "posicao": cadastro_map[nome]["posicao"]
             })
 
-    nomes_fixos = {
-        normalizar_nome(nome) for nome in (jogadores_fixos_time_a or [])
-        if normalizar_nome(nome)
-    }
-
-    jogadores_fixos_presentes = []
-    presentes_restantes = []
-
-    if aplicar_fixos_time_a and nomes_fixos:
-        nomes_fixos_adicionados = set()
-
-        for jogador in presentes:
-            nome_jogador = normalizar_nome(jogador["nome"])
-            if nome_jogador in nomes_fixos and nome_jogador not in nomes_fixos_adicionados:
-                jogador_copia = dict(jogador)
-                jogador_copia["fixo_time_a"] = True
-                jogadores_fixos_presentes.append(jogador_copia)
-                nomes_fixos_adicionados.add(nome_jogador)
-            else:
-                presentes_restantes.append(jogador)
-    else:
-        presentes_restantes = list(presentes)
-
     grupos = {
+        "DIRETORIA": [],
         "MENSALISTA": [],
         "DIARISTA": [],
-        "CONVIDADO": [],
-        "CRIANÇA": []
+        "CONVIDADO_1": [],
+        "CONVIDADO_2": []
     }
 
-    for jogador in presentes_restantes:
+    for jogador in presentes:
         categoria = jogador["categoria"]
         if categoria in grupos:
             grupos[categoria].append(jogador)
@@ -887,25 +795,10 @@ def sortear_times(df_cadastro, df_presenca, jogadores_fixos_time_a=None, aplicar
     for categoria in grupos:
         random.shuffle(grupos[categoria])
 
-    ordem_categorias = ["MENSALISTA", "DIARISTA", "CONVIDADO", "CRIANÇA"]
+    ordem_categorias = ["DIRETORIA", "MENSALISTA", "DIARISTA", "CONVIDADO_1", "CONVIDADO_2"]
 
-    time_1_objs = list(jogadores_fixos_presentes)
+    time_1_objs = []
     time_2_objs = []
-
-    quantidade_fixos_time_a = len(jogadores_fixos_presentes)
-
-    if aplicar_fixos_time_a and quantidade_fixos_time_a > 0:
-        jogadores_compensacao_time_b = []
-
-        for categoria in ordem_categorias:
-            if len(jogadores_compensacao_time_b) >= quantidade_fixos_time_a:
-                break
-
-            grupo = grupos[categoria]
-            while grupo and len(jogadores_compensacao_time_b) < quantidade_fixos_time_a:
-                jogadores_compensacao_time_b.append(grupo.pop(0))
-
-        time_2_objs.extend(jogadores_compensacao_time_b)
 
     for categoria in ordem_categorias:
         jogadores_grupo = grupos[categoria]
@@ -919,14 +812,13 @@ def sortear_times(df_cadastro, df_presenca, jogadores_fixos_time_a=None, aplicar
 
     def chave_ordenacao(jogador):
         val_status = jogador.get("status", 2)
-        ordem_cat = {"MENSALISTA": 1, "DIARISTA": 2, "CONVIDADO": 3, "CRIANÇA": 4}
+        ordem_cat = {"DIRETORIA": 1, "MENSALISTA": 2, "DIARISTA": 3, "CONVIDADO_1": 4, "CONVIDADO_2": 5}
         ordem_pos = {"ZAGUEIRO": 1, "MEIO CAMPO": 2, "ATACANTE": 3}
 
         val_cat = ordem_cat.get(jogador["categoria"], 99)
         val_pos = ordem_pos.get(jogador["posicao"], 99)
-        val_fixo = 0 if jogador.get("fixo_time_a") else 1
 
-        return (val_status, val_fixo, val_cat, val_pos)
+        return (val_status, val_cat, val_pos)
 
     time_1_objs.sort(key=chave_ordenacao)
     time_2_objs.sort(key=chave_ordenacao)
@@ -934,7 +826,7 @@ def sortear_times(df_cadastro, df_presenca, jogadores_fixos_time_a=None, aplicar
     time_1 = [obj["nome"] for obj in time_1_objs if str(obj["nome"]).strip()]
     time_2 = [obj["nome"] for obj in time_2_objs if str(obj["nome"]).strip()]
 
-    max_len = max(len(time_1), len(time_2)) if (time_1 or time_2) else 0
+    max_len = max(len(time_1), len(time_2))
     linhas_sorteio = []
 
     for i in range(max_len):
@@ -944,7 +836,7 @@ def sortear_times(df_cadastro, df_presenca, jogadores_fixos_time_a=None, aplicar
             "Time B": time_2[i] if i < len(time_2) else "",
         })
 
-    return pd.DataFrame(linhas_sorteio, columns=["Ordem", "Time A", "Time B"]), time_1, time_2
+    return pd.DataFrame(linhas_sorteio, columns=["Ordem", "Time A", "Time B"])
 
 def anexar_timestamp_sorteio(df_sorteio, timestamp_str):
     df_sorteio = df_sorteio.copy()
@@ -1006,20 +898,7 @@ def realizar_sorteio(mapa_abas):
         realizar_limpeza_sorteio(mapa_abas, msg_sucesso="Sorteio limpo, pois nenhum jogador foi marcado como presente.")
         return
 
-    data_hoje = obter_data_atual_referencia()
-    data_ultimo_sorteio_fixos = obter_data_ultimo_sorteio_fixos(mapa_abas)
-    aplicar_fixos_time_a = data_ultimo_sorteio_fixos != data_hoje
-
-    df_sorteio, time_a_sorteado, time_b_sorteado = sortear_times(
-        df_cadastro,
-        df_presenca,
-        jogadores_fixos_time_a=JOGADORES_FIXOS_TIME_A,
-        aplicar_fixos_time_a=aplicar_fixos_time_a
-    )
-
-    if aplicar_fixos_time_a:
-        registrar_data_ultimo_sorteio_fixos(mapa_abas, data_hoje)
-
+    df_sorteio = sortear_times(df_cadastro, df_presenca)
     timestamp_atual = formatar_timestamp_sorteio(agora_br())
     df_sorteio = anexar_timestamp_sorteio(df_sorteio, timestamp_atual)
     escrever_dataframe_na_aba(mapa_abas, ABA_SORTEIO, df_sorteio, COLUNAS_SORTEIO)
@@ -1029,15 +908,7 @@ def realizar_sorteio(mapa_abas):
     st.session_state.tipo_acao_pendente = ""
     st.session_state.confirmar_sorteio_pendente = False
 
-    if aplicar_fixos_time_a:
-        fixos_presentes = [nome for nome in JOGADORES_FIXOS_TIME_A if nome in time_a_sorteado]
-        if fixos_presentes:
-            st.success("Sorteio realizado com sucesso. No primeiro sorteio do dia, os jogadores fixos presentes foram alocados previamente no Time A.")
-        else:
-            st.success("Sorteio realizado com sucesso. Era o primeiro sorteio do dia, mas nenhum dos jogadores fixos definidos estava presente.")
-    else:
-        st.success("Sorteio realizado com sucesso.")
-
+    st.success("Sorteio realizado com sucesso.")
     st.rerun()
 
 # ==========================================================
@@ -1131,7 +1002,7 @@ try:
     planilha, mapa_abas = conectar_gsheet()
 
     if not st.session_state.abas_inicializadas:
-        inicializar_abas_se_necessario(planilha, mapa_abas)
+        inicializar_abas_se_necessario(mapa_abas)
         st.session_state.abas_inicializadas = True
 
     abas = st.tabs([
