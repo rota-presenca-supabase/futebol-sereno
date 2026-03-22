@@ -201,6 +201,46 @@ def aplicar_estilo_global():
             font-size: 0.92rem;
         }
 
+        .sereno-jogador-check-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            min-height: 42px;
+        }
+
+        .sereno-jogador-check-wrap div[data-testid="stCheckbox"] {
+            margin-bottom: 0 !important;
+            padding: 2px 0 !important;
+            border: none !important;
+            background: transparent !important;
+        }
+
+        .sereno-jogador-check-wrap div[data-testid="stCheckbox"] label {
+            gap: 0.35rem !important;
+            justify-content: flex-end !important;
+        }
+
+        @media (max-width: 640px) {
+            .sereno-jogador-linha {
+                padding: 8px 10px;
+                gap: 8px;
+            }
+
+            .sereno-jogador-nome {
+                font-size: 0.96rem;
+            }
+
+            .sereno-pill {
+                padding: 3px 8px;
+                font-size: 0.68rem;
+                margin-left: 6px;
+            }
+
+            .sereno-jogador-check-wrap {
+                min-width: 34px;
+            }
+        }
+
         div[data-testid="stForm"] {
             background: #ffffff;
             border: 1px solid #ececec;
@@ -1357,6 +1397,7 @@ try:
                         unsafe_allow_html=True,
                     )
                 with col2:
+                    st.markdown("<div class='sereno-jogador-check-wrap'>", unsafe_allow_html=True)
                     chave_diarista = f"jogador_diarista::{idx}::{nome}"
                     valor_inicial = categoria == "DIARISTA"
                     marcado = st.checkbox(
@@ -1364,7 +1405,10 @@ try:
                         value=valor_inicial,
                         key=chave_diarista,
                         disabled=not st.session_state.admin_autenticado,
+                        label_visibility="collapsed",
+                        help="Marcar para tornar o jogador exclusivamente DIARISTA.",
                     )
+                    st.markdown("</div>", unsafe_allow_html=True)
                     if st.session_state.admin_autenticado and marcado and categoria != "DIARISTA":
                         linha_nova = montar_linha_cadastro(nome, "DIARISTA", posicao)
                         for col in COLUNAS_CADASTRO:
