@@ -1344,16 +1344,14 @@ try:
                 posicao = normalizar_posicao(row.get("POSICAO", ""))
                 cor = cor_categoria(categoria)
 
-                col1, col2 = st.columns([5, 1.4])
+                st.markdown("<div class='sereno-jogador-linha'>", unsafe_allow_html=True)
+                col1, col2 = st.columns([6.3, 1.7])
                 with col1:
                     st.markdown(
                         f"""
-                        <div class="sereno-jogador-linha">
-                            <div>
-                                <span class="sereno-jogador-nome" style="color:{cor};">{nome}</span>
-                                <span class="sereno-pill" style="background:{cor};">{categoria or "SEM CATEGORIA"}</span>
-                            </div>
-                            <div class="sereno-meta">{posicao}</div>
+                        <div>
+                            <span class="sereno-jogador-nome" style="color:{cor};">{nome}</span>
+                            <span class="sereno-pill" style="background:{cor};">{categoria or "SEM CATEGORIA"}</span>
                         </div>
                         """,
                         unsafe_allow_html=True,
@@ -1361,7 +1359,12 @@ try:
                 with col2:
                     chave_diarista = f"jogador_diarista::{idx}::{nome}"
                     valor_inicial = categoria == "DIARISTA"
-                    marcado = st.checkbox("DIARISTA", value=valor_inicial, key=chave_diarista, disabled=not st.session_state.admin_autenticado)
+                    marcado = st.checkbox(
+                        "DIARISTA",
+                        value=valor_inicial,
+                        key=chave_diarista,
+                        disabled=not st.session_state.admin_autenticado,
+                    )
                     if st.session_state.admin_autenticado and marcado and categoria != "DIARISTA":
                         linha_nova = montar_linha_cadastro(nome, "DIARISTA", posicao)
                         for col in COLUNAS_CADASTRO:
@@ -1370,6 +1373,7 @@ try:
                         sincronizar_lista_presenca(mapa_abas, forcar_gravacao=False)
                         st.success(f"{nome} agora é exclusivamente DIARISTA.")
                         st.rerun()
+                st.markdown("</div>", unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
 
             if not st.session_state.admin_autenticado:
