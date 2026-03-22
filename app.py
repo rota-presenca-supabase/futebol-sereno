@@ -62,6 +62,7 @@ FORMATO_SORTEIO = "%Y-%m-%d %H:%M:%S"
 # ==========================================================
 ADMIN_USUARIO = "Sereno"
 ADMIN_SENHA = "fc"
+ADMIN_SENHA_TORNEIO_LOGIN = "torneio"
 SENHA_MASTER_SORTEIO = "@"
 SENHA_TORNEIO = "123"
 
@@ -1139,6 +1140,7 @@ defaults = {
     "abas_inicializadas": False,
     "admin_autenticado": False,
     "admin_erro_login": "",
+    "torneio_habilitado": False,
     "exigir_senha_master_acao": False,
     "erro_senha_master_acao": "",
     "tipo_acao_pendente": "",
@@ -1170,8 +1172,9 @@ with st.sidebar:
             entrar_admin = st.form_submit_button("Entrar")
 
         if entrar_admin:
-            if usuario_admin == ADMIN_USUARIO and senha_admin == ADMIN_SENHA:
+            if usuario_admin == ADMIN_USUARIO and senha_admin in [ADMIN_SENHA, ADMIN_SENHA_TORNEIO_LOGIN]:
                 st.session_state.admin_autenticado = True
+                st.session_state.torneio_habilitado = senha_admin == ADMIN_SENHA_TORNEIO_LOGIN
                 st.session_state.admin_erro_login = ""
                 st.session_state.forcar_atualizacao_presenca = True
                 st.rerun()
@@ -1184,8 +1187,10 @@ with st.sidebar:
     else:
         st.success("Login Autenticado.")
         st.write(f"Usuário: {ADMIN_USUARIO}")
+        st.write("Acesso ao Torneio: " + ("Liberado" if st.session_state.torneio_habilitado else "Oculto"))
         if st.button("Sair", use_container_width=True):
             st.session_state.admin_autenticado = False
+            st.session_state.torneio_habilitado = False
             st.session_state.admin_erro_login = ""
             st.rerun()
 
@@ -1214,13 +1219,16 @@ try:
 
     mapa_abas = obter_mapa_abas_atualizado(planilha)
 
-    abas = st.tabs([
+    nomes_abas = [
         "CADASTRO        ",
         "JOGADORES        ",
         "PRESENÇA        ",
         "SORTEIO        ",
-        "TORNEIO",
-    ])
+    ]
+    if st.session_state.torneio_habilitado:
+        nomes_abas.append("TORNEIO")
+
+    abas = st.tabs(nomes_abas)
 
     # ======================================================
     # ABA 1 - CADASTRO
@@ -1365,14 +1373,23 @@ try:
                         key=chave_diarista,
                         disabled=not st.session_state.admin_autenticado,
                     )
-                    if st.session_state.admin_autenticado and marcado and categoria != "DIARISTA":
-                        linha_nova = montar_linha_cadastro(nome, "DIARISTA", posicao)
-                        for col in COLUNAS_CADASTRO:
-                            df_cadastro.at[idx, col] = linha_nova[col]
-                        escrever_dataframe_na_aba(mapa_abas, ABA_CADASTRO, df_cadastro, COLUNAS_CADASTRO)
-                        sincronizar_lista_presenca(mapa_abas, forcar_gravacao=False)
-                        st.success(f"{nome} agora é exclusivamente DIARISTA.")
-                        st.rerun()
+                    if st.session_state.admin_autenticado:
+                        if marcado and categoria != "DIARISTA":
+                            linha_nova = montar_linha_cadastro(nome, "DIARISTA", posicao)
+                            for col in COLUNAS_CADASTRO:
+                                df_cadastro.at[idx, col] = linha_nova[col]
+                            escrever_dataframe_na_aba(mapa_abas, ABA_CADASTRO, df_cadastro, COLUNAS_CADASTRO)
+                            sincronizar_lista_presenca(mapa_abas, forcar_gravacao=False)
+                            st.success(f"{nome} agora é exclusivamente DIARISTA.")
+                            st.rerun()
+                        elif (not marcado) and categoria == "DIARISTA":
+                            linha_nova = montar_linha_cadastro(nome, "CONVIDADO_1", posicao)
+                            for col in COLUNAS_CADASTRO:
+                                df_cadastro.at[idx, col] = linha_nova[col]
+                            escrever_dataframe_na_aba(mapa_abas, ABA_CADASTRO, df_cadastro, COLUNAS_CADASTRO)
+                            sincronizar_lista_presenca(mapa_abas, forcar_gravacao=False)
+                            st.success(f"{nome} agora é automaticamente CONVIDADO_1.")
+                            st.rerun()
                 st.markdown("</div>", unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
 
@@ -1552,103 +1569,103 @@ try:
     # ======================================================
     # ABA 5 - TORNEIO
     # ======================================================
-    with abas[4]:
-        mapa_abas = obter_mapa_abas_atualizado(planilha)
-        cap_a, cap_b = obter_capitaes_torneio(mapa_abas)
-        dt_ultimo_torneio = obter_dt_ultimo_sorteio_torneio(mapa_abas)
-        dt_proximo_torneio = obter_dt_proximo_sorteio_torneio(mapa_abas)
+    if st.session_state.torneio_habilitado:
+        with abas[4]:
+            mapa_abas = obter_mapa_abas_atualizado(planilha)
+            cap_a, cap_b = obter_capitaes_torneio(mapa_abas)
+            dt_ultimo_torneio = obter_dt_ultimo_sorteio_torneio(mapa_abas)
+            dt_proximo_torneio = obter_dt_proximo_sorteio_torneio(mapa_abas)
 
-        df_torneio_sorteio = ler_aba_com_cabecalho(mapa_abas, ABA_TORNEIO_SORTEIO, COLUNAS_TORNEIO_SORTEIO)
-        df_torneio_sorteio["Ordem"] = df_torneio_sorteio["Ordem"].astype(str).str.strip()
-        df_torneio_valido = df_torneio_sorteio[df_torneio_sorteio["Ordem"] != ""].reset_index(drop=True)
-        tem_torneio_sorteado = not df_torneio_valido.empty
+            df_torneio_sorteio = ler_aba_com_cabecalho(mapa_abas, ABA_TORNEIO_SORTEIO, COLUNAS_TORNEIO_SORTEIO)
+            df_torneio_sorteio["Ordem"] = df_torneio_sorteio["Ordem"].astype(str).str.strip()
+            df_torneio_valido = df_torneio_sorteio[df_torneio_sorteio["Ordem"] != ""].reset_index(drop=True)
+            tem_torneio_sorteado = not df_torneio_valido.empty
 
-        st.markdown("<div class='sereno-card-torneio'>", unsafe_allow_html=True)
-        st.markdown("### Capitães do Torneio")
-        st.write(f"**CAPITÃO DO TIME_A:** {cap_a or 'Não definido'}")
-        st.write(f"**CAPITÃO DO TIME_B:** {cap_b or 'Não definido'}")
+            st.markdown("<div class='sereno-card-torneio'>", unsafe_allow_html=True)
+            st.markdown("### Capitães do Torneio")
+            st.write(f"**CAPITÃO DO TIME_A:** {cap_a or 'Não definido'}")
+            st.write(f"**CAPITÃO DO TIME_B:** {cap_b or 'Não definido'}")
 
-        if dt_ultimo_torneio:
-            st.info(
-                f"Último sorteio do torneio: {formatar_data_hora_br(dt_ultimo_torneio)}. "
-                f"Próximo sorteio sem senha master: {formatar_data_hora_br(dt_proximo_torneio)}."
+            if dt_ultimo_torneio:
+                st.info(
+                    f"Último sorteio do torneio: {formatar_data_hora_br(dt_ultimo_torneio)}. "
+                    f"Próximo sorteio sem senha master: {formatar_data_hora_br(dt_proximo_torneio)}."
+                )
+            else:
+                st.info("Ainda não houve sorteio do torneio.")
+            st.markdown("</div>", unsafe_allow_html=True)
+
+            torneio_limpo = torneio_esta_limpo(mapa_abas)
+            if torneio_limpo:
+                st.success("Torneio limpo: a seleção automática de novos capitães está liberada.")
+            else:
+                st.warning("Para selecionar novos capitães automaticamente, primeiro use LIMPAR_SORTEIO. Ao limpar, a dupla de capitães também é apagada.")
+
+            senha_torneio_digitada = st.text_input("Senha_torneio", type="password", key="senha_torneio_digitada")
+            senha_master_torneio = st.text_input(
+                "Senha master (somente para liberar novo sorteio antes de 3 meses ou limpar sorteio)",
+                type="password",
+                key="senha_master_torneio_digitada",
             )
-        else:
-            st.info("Ainda não houve sorteio do torneio.")
-        st.markdown("</div>", unsafe_allow_html=True)
 
-        torneio_limpo = torneio_esta_limpo(mapa_abas)
-        if torneio_limpo:
-            st.success("Torneio limpo: a seleção automática de novos capitães está liberada.")
-        else:
-            st.warning("Para selecionar novos capitães automaticamente, primeiro use LIMPAR_SORTEIO. Ao limpar, a dupla de capitães também é apagada.")
+            if st.session_state.admin_autenticado:
+                c1, c2, c3 = st.columns(3)
 
-        senha_torneio_digitada = st.text_input("Senha_torneio", type="password", key="senha_torneio_digitada")
-        senha_master_torneio = st.text_input(
-            "Senha master (somente para liberar novo sorteio antes de 3 meses ou limpar sorteio)",
-            type="password",
-            key="senha_master_torneio_digitada",
+                with c1:
+                    st.markdown('<div id="btn-torneio-capitaes-auto" style="display:none;"></div>', unsafe_allow_html=True)
+                    if st.button("SELECIONAR CAPITÃES AUTOMATICAMENTE", use_container_width=True):
+                        if senha_torneio_digitada != SENHA_TORNEIO:
+                            st.error("Senha_torneio inválida.")
+                        elif not torneio_limpo:
+                            st.error("Só é permitido selecionar novos capitães automaticamente quando o sorteio do torneio estiver limpo.")
+                        else:
+                            selecionar_capitaes_automaticamente(mapa_abas)
+
+                with c2:
+                    st.markdown('<div id="btn-torneio-sortear" style="display:none;"></div>', unsafe_allow_html=True)
+                    if st.button("SORTEAR TIMES DO TORNEIO", use_container_width=True):
+                        if senha_torneio_digitada != SENHA_TORNEIO:
+                            st.error("Senha_torneio inválida.")
+                        else:
+                            liberado = True
+                            if dt_proximo_torneio and agora_br() < dt_proximo_torneio:
+                                liberado = senha_master_torneio == SENHA_MASTER_SORTEIO
+                                if not liberado:
+                                    st.error("Novo sorteio do torneio só pode ser realizado após 3 meses, salvo com senha master válida.")
+                            if liberado:
+                                sortear_torneio(mapa_abas)
+
+                with c3:
+                    st.markdown('<div id="btn-torneio-limpar" style="display:none;"></div>', unsafe_allow_html=True)
+                    if st.button("LIMPAR_SORTEIO", use_container_width=True):
+                        if senha_master_torneio != SENHA_MASTER_SORTEIO:
+                            st.error("Senha master inválida para limpar o sorteio do torneio.")
+                        else:
+                            limpar_sorteio_torneio(mapa_abas)
+            else:
+                st.warning("Ações do torneio restritas ao Adm.!")
+
+            st.markdown("### Resultado do Sorteio do Torneio")
+            if not tem_torneio_sorteado:
+                st.info("Ainda não há sorteio do torneio realizado!")
+            else:
+                exibir_tabela_html(df_torneio_valido[["Ordem", "Time A", "Time B"]], centralizar_colunas=["Ordem", "Time A", "Time B"])
+                st.markdown('<div id="btn-whatsapp-torneio" style="display:none;"></div>', unsafe_allow_html=True)
+                st.link_button("ENVIAR TIMES DO TORNEIO PARA WHATSAPP", gerar_link_whatsapp_torneio(df_torneio_sorteio), use_container_width=True)
+
+        # ======================================================
+        # LOGO NO FINAL DA PÁGINA
+        # ======================================================
+        col_logo_esq, col_logo_centro, col_logo_dir = st.columns([1, 1.5, 1])
+        with col_logo_centro:
+            logo_path = Path("SERENO FC.png")
+            if logo_path.exists():
+                st.image(str(logo_path), use_container_width=True)
+
+        st.markdown(
+            "<div style='text-align:center; font-size:1rem; font-weight:600; color:#374151; margin-top:10px;'>App criado por: Teori@ / Sereno FC</div>",
+            unsafe_allow_html=True,
         )
-
-        if st.session_state.admin_autenticado:
-            c1, c2, c3 = st.columns(3)
-
-            with c1:
-                st.markdown('<div id="btn-torneio-capitaes-auto" style="display:none;"></div>', unsafe_allow_html=True)
-                if st.button("SELECIONAR CAPITÃES AUTOMATICAMENTE", use_container_width=True):
-                    if senha_torneio_digitada != SENHA_TORNEIO:
-                        st.error("Senha_torneio inválida.")
-                    elif not torneio_limpo:
-                        st.error("Só é permitido selecionar novos capitães automaticamente quando o sorteio do torneio estiver limpo.")
-                    else:
-                        selecionar_capitaes_automaticamente(mapa_abas)
-
-            with c2:
-                st.markdown('<div id="btn-torneio-sortear" style="display:none;"></div>', unsafe_allow_html=True)
-                if st.button("SORTEAR TIMES DO TORNEIO", use_container_width=True):
-                    if senha_torneio_digitada != SENHA_TORNEIO:
-                        st.error("Senha_torneio inválida.")
-                    else:
-                        liberado = True
-                        if dt_proximo_torneio and agora_br() < dt_proximo_torneio:
-                            liberado = senha_master_torneio == SENHA_MASTER_SORTEIO
-                            if not liberado:
-                                st.error("Novo sorteio do torneio só pode ser realizado após 3 meses, salvo com senha master válida.")
-                        if liberado:
-                            sortear_torneio(mapa_abas)
-
-            with c3:
-                st.markdown('<div id="btn-torneio-limpar" style="display:none;"></div>', unsafe_allow_html=True)
-                if st.button("LIMPAR_SORTEIO", use_container_width=True):
-                    if senha_master_torneio != SENHA_MASTER_SORTEIO:
-                        st.error("Senha master inválida para limpar o sorteio do torneio.")
-                    else:
-                        limpar_sorteio_torneio(mapa_abas)
-        else:
-            st.warning("Ações do torneio restritas ao Adm.!")
-
-        st.markdown("### Resultado do Sorteio do Torneio")
-        if not tem_torneio_sorteado:
-            st.info("Ainda não há sorteio do torneio realizado!")
-        else:
-            exibir_tabela_html(df_torneio_valido[["Ordem", "Time A", "Time B"]], centralizar_colunas=["Ordem", "Time A", "Time B"])
-            st.markdown('<div id="btn-whatsapp-torneio" style="display:none;"></div>', unsafe_allow_html=True)
-            st.link_button("ENVIAR TIMES DO TORNEIO PARA WHATSAPP", gerar_link_whatsapp_torneio(df_torneio_sorteio), use_container_width=True)
-
-    # ======================================================
-    # LOGO NO FINAL DA PÁGINA
-    # ======================================================
-    col_logo_esq, col_logo_centro, col_logo_dir = st.columns([1, 1.5, 1])
-    with col_logo_centro:
-        logo_path = Path("SERENO FC.png")
-        if logo_path.exists():
-            st.image(str(logo_path), use_container_width=True)
-
-    st.markdown(
-        "<div style='text-align:center; font-size:1rem; font-weight:600; color:#374151; margin-top:10px;'>App criado por: Teori@ / Sereno FC</div>",
-        unsafe_allow_html=True,
-    )
-
 except SpreadsheetNotFound:
     st.error("Planilha 'FUTEBOL_SERENO' não encontrada ou não compartilhada com a service account.")
 except Exception as e:
