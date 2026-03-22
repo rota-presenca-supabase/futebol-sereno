@@ -1365,31 +1365,35 @@ try:
                         unsafe_allow_html=True,
                     )
                 with col2:
-                    chave_diarista = f"jogador_diarista::{idx}::{nome}"
-                    valor_inicial = categoria == "DIARISTA"
-                    marcado = st.checkbox(
-                        "DIARISTA",
-                        value=valor_inicial,
-                        key=chave_diarista,
-                        disabled=not st.session_state.admin_autenticado,
-                    )
-                    if st.session_state.admin_autenticado:
-                        if marcado and categoria != "DIARISTA":
-                            linha_nova = montar_linha_cadastro(nome, "DIARISTA", posicao)
-                            for col in COLUNAS_CADASTRO:
-                                df_cadastro.at[idx, col] = linha_nova[col]
-                            escrever_dataframe_na_aba(mapa_abas, ABA_CADASTRO, df_cadastro, COLUNAS_CADASTRO)
-                            sincronizar_lista_presenca(mapa_abas, forcar_gravacao=False)
-                            st.success(f"{nome} agora é exclusivamente DIARISTA.")
-                            st.rerun()
-                        elif (not marcado) and categoria == "DIARISTA":
-                            linha_nova = montar_linha_cadastro(nome, "CONVIDADO_1", posicao)
-                            for col in COLUNAS_CADASTRO:
-                                df_cadastro.at[idx, col] = linha_nova[col]
-                            escrever_dataframe_na_aba(mapa_abas, ABA_CADASTRO, df_cadastro, COLUNAS_CADASTRO)
-                            sincronizar_lista_presenca(mapa_abas, forcar_gravacao=False)
-                            st.success(f"{nome} agora é automaticamente CONVIDADO_1.")
-                            st.rerun()
+                    categorias_com_checkbox = {"DIARISTA", "CONVIDADO_1", "CONVIDADO_2"}
+                    if categoria in categorias_com_checkbox:
+                        chave_diarista = f"jogador_diarista::{idx}::{nome}"
+                        valor_inicial = categoria == "DIARISTA"
+                        marcado = st.checkbox(
+                            "DIARISTA",
+                            value=valor_inicial,
+                            key=chave_diarista,
+                            disabled=not st.session_state.admin_autenticado,
+                        )
+                        if st.session_state.admin_autenticado:
+                            if marcado and categoria != "DIARISTA":
+                                linha_nova = montar_linha_cadastro(nome, "DIARISTA", posicao)
+                                for col in COLUNAS_CADASTRO:
+                                    df_cadastro.at[idx, col] = linha_nova[col]
+                                escrever_dataframe_na_aba(mapa_abas, ABA_CADASTRO, df_cadastro, COLUNAS_CADASTRO)
+                                sincronizar_lista_presenca(mapa_abas, forcar_gravacao=False)
+                                st.success(f"{nome} agora é exclusivamente DIARISTA.")
+                                st.rerun()
+                            elif (not marcado) and categoria == "DIARISTA":
+                                linha_nova = montar_linha_cadastro(nome, "CONVIDADO_1", posicao)
+                                for col in COLUNAS_CADASTRO:
+                                    df_cadastro.at[idx, col] = linha_nova[col]
+                                escrever_dataframe_na_aba(mapa_abas, ABA_CADASTRO, df_cadastro, COLUNAS_CADASTRO)
+                                sincronizar_lista_presenca(mapa_abas, forcar_gravacao=False)
+                                st.success(f"{nome} agora é automaticamente CONVIDADO_1.")
+                                st.rerun()
+                    else:
+                        st.markdown("&nbsp;", unsafe_allow_html=True)
                 st.markdown("</div>", unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
 
