@@ -473,6 +473,10 @@ def gerar_link_whatsapp_sorteio(df_sorteio):
 # ==========================================================
 # CONEXÃO
 # ==========================================================
+def carregar_mapa_abas(planilha):
+    worksheets = executar_com_retry(planilha.worksheets)
+    return {ws.title: ws for ws in worksheets}
+
 @st.cache_resource
 def conectar_gsheet():
     creds = Credentials.from_service_account_info(
@@ -481,9 +485,7 @@ def conectar_gsheet():
     )
     client = gspread.authorize(creds)
     planilha = executar_com_retry(client.open, NOME_PLANILHA)
-
-    worksheets = executar_com_retry(planilha.worksheets)
-    mapa_abas = {ws.title: ws for ws in worksheets}
+    mapa_abas = carregar_mapa_abas(planilha)
 
     return planilha, mapa_abas
 
@@ -570,10 +572,22 @@ def inicializar_abas_se_necessario(planilha, mapa_abas):
         (ABA_CONTROLE_SORTEIO, COLUNAS_CONTROLE_SORTEIO),
     ]
 
+    mapa_abas.update(carregar_mapa_abas(planilha))
+
     for nome_aba, colunas in configuracoes:
         if nome_aba not in mapa_abas:
-            nova_aba = executar_com_retry(planilha.add_worksheet, title=nome_aba, rows=200, cols=max(len(colunas), 2))
-            mapa_abas[nome_aba] = nova_aba
+            try:
+                executar_com_retry(
+                    planilha.add_worksheet,
+                    title=nome_aba,
+                    rows=200,
+                    cols=max(len(colunas), 2)
+                )
+            except APIError as e:
+                if "already exists" not in str(e):
+                    raise
+
+            mapa_abas.update(carregar_mapa_abas(planilha))
 
         ws = obter_worksheet(mapa_abas, nome_aba)
         valores = executar_com_retry(ws.get_all_values)
