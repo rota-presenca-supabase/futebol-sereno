@@ -44,7 +44,7 @@ FUSO_BR = ZoneInfo("America/Sao_Paulo")
 FORMATO_SORTEIO = "%Y-%m-%d %H:%M:%S"
 FORMATO_DATA_CONTROLE = "%Y-%m-%d"
 
-JOGADORES_FIXOS_TIME_A = ["EVERTHON", "DOUGLAS CARECA", "TEORIA", "BIMBO", "LUCAS", "ALEXANDRE"]
+JOGADORES_FIXOS_TIME_A = ["EVERTHON", "DOUGLAS CARECA", "TEORIA", "LUCAS", "ALEXANDRE", "BIMBO"]
 CHAVE_DATA_ULTIMO_SORTEIO_FIXOS = "DATA_ULTIMO_SORTEIO_FIXOS_TIME_A"
 
 # ==========================================================
@@ -891,6 +891,21 @@ def sortear_times(df_cadastro, df_presenca, jogadores_fixos_time_a=None, aplicar
 
     time_1_objs = list(jogadores_fixos_presentes)
     time_2_objs = []
+
+    quantidade_fixos_time_a = len(jogadores_fixos_presentes)
+
+    if aplicar_fixos_time_a and quantidade_fixos_time_a > 0:
+        jogadores_compensacao_time_b = []
+
+        for categoria in ordem_categorias:
+            if len(jogadores_compensacao_time_b) >= quantidade_fixos_time_a:
+                break
+
+            grupo = grupos[categoria]
+            while grupo and len(jogadores_compensacao_time_b) < quantidade_fixos_time_a:
+                jogadores_compensacao_time_b.append(grupo.pop(0))
+
+        time_2_objs.extend(jogadores_compensacao_time_b)
 
     for categoria in ordem_categorias:
         jogadores_grupo = grupos[categoria]
