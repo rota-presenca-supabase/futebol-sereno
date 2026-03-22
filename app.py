@@ -489,26 +489,43 @@ def conectar_gsheet():
     return executar_com_retry(client.open, NOME_PLANILHA)
 
 
-def obter_mapa_abas_atualizado(planilha):
+def obter_token_cache_planilha():
+    return int(st.session_state.get("planilha_cache_token", 0))
+
+
+@st.cache_data(ttl=120)
+def listar_titulos_abas_cacheado(cache_token):
+    planilha = conectar_gsheet()
     worksheets = executar_com_retry(planilha.worksheets)
-    return {ws.title: ws for ws in worksheets}
+    return [ws.title for ws in worksheets]
+
+
+def obter_mapa_abas_atualizado(planilha=None, forcar=False):
+    if forcar or not st.session_state.get("mapa_abas_cache"):
+        titulos = listar_titulos_abas_cacheado(obter_token_cache_planilha())
+        st.session_state.mapa_abas_cache = {titulo: titulo for titulo in titulos}
+    return st.session_state.mapa_abas_cache
 
 
 def obter_worksheet(mapa_abas, nome_aba):
     if nome_aba not in mapa_abas:
         raise ValueError(f"A aba '{nome_aba}' não foi encontrada na planilha.")
-    return mapa_abas[nome_aba]
-
-
-def limpar_cache_planilha():
-    ler_valores_aba_cacheado.clear()
-
-
-@st.cache_data(ttl=15)
-def ler_valores_aba_cacheado(nome_aba):
     planilha = conectar_gsheet()
-    mapa_abas = obter_mapa_abas_atualizado(planilha)
-    ws = obter_worksheet(mapa_abas, nome_aba)
+    return executar_com_retry(planilha.worksheet, nome_aba)
+
+
+def limpar_cache_planilha(recarregar_abas=True):
+    ler_valores_aba_cacheado.clear()
+    listar_titulos_abas_cacheado.clear()
+    st.session_state.planilha_cache_token = obter_token_cache_planilha() + 1
+    if recarregar_abas:
+        st.session_state.mapa_abas_cache = {}
+
+
+@st.cache_data(ttl=120)
+def ler_valores_aba_cacheado(nome_aba, cache_token):
+    planilha = conectar_gsheet()
+    ws = executar_com_retry(planilha.worksheet, nome_aba)
     return executar_com_retry(ws.get_all_values)
 
 
@@ -521,7 +538,7 @@ def ler_valores_aba_tempo_real(mapa_abas, nome_aba):
 # LEITURA / ESCRITA
 # ==========================================================
 def ler_aba_com_cabecalho(mapa_abas, nome_aba, colunas_esperadas):
-    valores = ler_valores_aba_cacheado(nome_aba)
+    valores = ler_valores_aba_cacheado(nome_aba, obter_token_cache_planilha())
     if not valores:
         return pd.DataFrame(columns=colunas_esperadas)
 
@@ -588,7 +605,7 @@ def migrar_df_cadastro_para_novo_modelo(df_existente):
 
 
 def inicializar_abas_se_necessario(planilha):
-    mapa_abas = obter_mapa_abas_atualizado(planilha)
+    mapa_abas = obter_mapa_abas_atualizado(planilha, forcar=not bool(st.session_state.get("mapa_abas_cache")))
     configuracoes = [
         (ABA_CADASTRO, COLUNAS_CADASTRO),
         (ABA_PRESENCA, COLUNAS_PRESENCA),
@@ -1111,6 +1128,8 @@ defaults = {
     "pendente_excluir_jogador": "",
     "forcar_atualizacao_presenca": False,
     "confirmar_sorteio_pendente": False,
+    "planilha_cache_token": 0,
+    "mapa_abas_cache": {},
 }
 for chave, valor in defaults.items():
     if chave not in st.session_state:
@@ -1347,14 +1366,14 @@ try:
 
         if st.session_state.get("forcar_atualizacao_presenca", False):
             limpar_cache_planilha()
-            mapa_abas = obter_mapa_abas_atualizado(planilha)
+            mapa_abas = obter_mapa_abas_atualizado(planilha, forcar=True)
             df_fresco = sincronizar_lista_presenca(mapa_abas, forcar_gravacao=False)
             aplicar_df_presenca_ao_estado(df_fresco)
             st.session_state.forcar_atualizacao_presenca = False
 
         if st.button("🔄 Atualizar Presenças", use_container_width=True):
             limpar_cache_planilha()
-            mapa_abas = obter_mapa_abas_atualizado(planilha)
+            mapa_abas = obter_mapa_abas_atualizado(planilha, forcar=True)
             df_fresco = sincronizar_lista_presenca(mapa_abas, forcar_gravacao=False)
             aplicar_df_presenca_ao_estado(df_fresco)
             st.rerun()
